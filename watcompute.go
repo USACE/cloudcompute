@@ -114,7 +114,7 @@ type PluginInputs struct {
 	Environment       []KeyValuePair
 	Parameters        map[string]string
 	DataSources       []DataSource
-	PayloadAttributes []KeyValuePair
+	PayloadAttributes map[string]interface{}
 }
 
 //Generalized data sources including FILE, DB, etc
