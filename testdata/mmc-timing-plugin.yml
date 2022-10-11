@@ -1,0 +1,67 @@
+#registered sources
+#all credentials stored and injected into running containers with AWS Secret Manager
+#any source used by a plubin manifest will get credentials in the envrionment
+sources:
+  - source:
+      name: MODEL_LIBRARY_S3_STORE
+      store: FILE
+      store_type: S3
+      root: /model-library
+      env_prefix: MODEL_LIBRARY
+      credentials: arn:aws:secretsmanager:us-east-1:038611608639:secret:dev/s3/mmc-storage-6-dI6kN5
+  - source:
+      name: NSI_POSTGRES_STORE
+      store: DB
+      store_type: POSTGRES
+      env_prefix: NSI_POSTGRES 
+      credentials: arn:aws:secretsmanager:us-east-1:038611608639:secret:dev/pgsql/mmc-pg12
+
+
+
+#volumes always mount to /data
+#-----------------------
+plugin:
+  name: mmc-arrival-time
+  id: 11234-2345-7654
+  description: compute plugin that calculates the MMC flood wave arrival time from a dam break model breach and no-breach scenario   
+  image_and_tag: 038611608639.dkr.ecr.us-east-1.amazonaws.com/mmc-timing-function:0.01
+  command: ["/app/mmc-timing", "Ref::param1"]
+  compute_environment:
+    name: ffrd-large #this is probably a job queue
+    vcpu: 1
+    memory: 2048
+  environment:
+    RASLIBCMD: /app/raslib
+    MMC_TEMP_OUTPUT: /app/tmp
+    MMC_DELTA: 2.0
+  volumes:
+    - LOCAL
+  parameters:
+    param1: --cmd
+  manifest:
+    execution_timeout: int
+    retry_attamps: int
+    inputs:
+      environment:
+        - MMC_FAIL_PLAN: required
+        - MMC_NOT_FAIL_PLAN: required
+        - MMC_BREACH_TIME: required
+        - MMC_SCENARIO: required
+        - MMC_S3_ROOT: required
+        - MMC_DELTA: optional
+      parameters:
+        param1: --cmd2
+      command: [] #optional
+      data_sources:
+        - data_source:
+          name: breach
+          description: Breach scenario RAS HDF5 output file
+          source: MODEL_LIBRARY_S3_STORE
+        - data_source:
+          name: non-breach
+          description: Non-Breach scenario RAS HDF5 output file
+          source: MODEL_LIBRARY_S3_STORE
+          
+
+
+
