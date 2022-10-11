@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-//EventGenerators provide an interator type interface to work with sets of events for a WatCompute.
+//EventGenerators provide an iterator type interface to work with sets of events for a WatCompute.
 type EventGenerator interface {
 	HasNextEvent() bool
 	NextEvent() Event
@@ -67,7 +67,7 @@ func getManifest(manifests []Manifest, id string) (Manifest, error) {
 	return Manifest{}, errors.New("Unable to find Manifest in list")
 }
 
-//StocahsticEvents is an EventGenerator that generates sets of stochastic events
+//StochasticEvents is an EventGenerator that generates sets of stochastic events
 //based on a manifest tempate and start and end indices.
 //This type is not currently implemented
 type StochasticEvents struct {

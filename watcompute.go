@@ -13,7 +13,7 @@ import (
 type WatCache interface{}
 */
 
-//WatCompute is a compute subission for a single dag for a set of events
+//WatCompute is a compute submission for a single dag for a set of events
 //The compute environment Job Queue and Job Definitions must exist before a WatCompute
 //can be initiated.
 type WatCompute struct {
@@ -97,24 +97,24 @@ func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
 
 //Manifest is the information necessary to execute a single job in an event
 type Manifest struct {
-	ManifestName  string `yaml:"manifest_name"`
-	ManifestID    string `yaml:"manifest_id,omitempty"`
-	Command       []string
-	Dependencies  []JobDependency
-	Inputs        PluginInputs
-	Outputs       []DataSource
-	JobDefinition string
-	Tags          map[string]string
-	RetryAttemts  int32
-	JobTimeout    int32
+	ManifestName  string            `yaml:"manifest_name"`
+	ManifestID    string            `yaml:"manifest_id,omitempty"`
+	Command       []string          `yaml:"command"`
+	Dependencies  []JobDependency   `yaml:"dependencies"`
+	Inputs        PluginInputs      `yaml:"inputs"`
+	Outputs       []DataSource      `yaml:"outputs"`
+	JobDefinition string            `yaml:"job_definition"`
+	Tags          map[string]string `yaml:"tags"`
+	RetryAttemts  int32             `yaml:"retry_attempts"`
+	JobTimeout    int32             `yaml:"job_timeout"`
 }
 
 //Job level inputs that can be injected into a container
 type PluginInputs struct {
-	Environment []KeyValuePair    //--ert
-	Parameters  map[string]string //--ert
-	DataSources []DataSource      //jrt
-	//PayloadVars []KeyValuePair //--ert
+	Environment       []KeyValuePair
+	Parameters        map[string]string
+	DataSources       []DataSource
+	PayloadAttributes []KeyValuePair
 }
 
 //Generalized data sources including FILE, DB, etc
