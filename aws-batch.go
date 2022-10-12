@@ -17,6 +17,7 @@ var awsComputeProfile string = "wat_compute" //@TODO: get this from environment
 var awsLogGroup string = "/aws/batch/job"
 var ctx context.Context = context.Background()
 
+//AWS Batch Compute Provider implementation
 type AwsBatchProvider struct {
 	client *batch.Client
 	logs   *cloudwatchlogs.Client
@@ -131,16 +132,6 @@ func (abp *AwsBatchProvider) describeBatchJobs(submittedJobIds []string) (*batch
 	}
 	return abp.client.DescribeJobs(ctx, &input)
 }
-
-/*
-func jobIds(jobs []Job) []string {
-	jobIds := make([]string, len(jobs))
-	for i, v := range jobs {
-		jobIds[i] = *v.SubmittedJob.JobId
-	}
-	return jobIds
-}
-*/
 
 func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides {
 

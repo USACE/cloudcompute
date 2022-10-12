@@ -9,10 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-/*
-type WatCache interface{}
-*/
-
 //WatCompute is a compute submission for a single dag for a set of events
 //The compute environment Job Queue and Job Definitions must exist before a WatCompute
 //can be initiated.
@@ -96,6 +92,7 @@ func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
 //////// MANIFEST ///////////
 
 //Manifest is the information necessary to execute a single job in an event
+//@TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
 type Manifest struct {
 	ManifestName  string            `yaml:"manifest_name"`
 	ManifestID    string            `yaml:"manifest_id,omitempty"`
@@ -116,25 +113,6 @@ type PluginInputs struct {
 	DataSources       []DataSource
 	PayloadAttributes map[string]interface{}
 }
-
-//Generalized data sources including FILE, DB, etc
-//The credential attribute is the credential prefix
-//used to identify credentials in the environment.
-//For example "MODEL_LIBRARY" would match "MODEL_LIBRARY_AWS_ACCESS_KEY_ID"
-//or an empty string to ignore a prefix match.
-//@TODO Depricated.  Is now in the SDK
-/*
-type DataSource struct {
-	Name      string
-	ID        uuid.UUID //optional.  used primarily for topological sort based on input/output dependencies
-	DataType  string    //file,db,
-	StoreType string    //S3
-	EnvPrefix string
-	//Credentials string //the credential prefix used to identify credenti
-	Paths      []string          //testing to support options like shapefiles which a single source consists of multiple files
-	Parameters map[string]string //testing this approach to work with internal path types
-}
-*/
 
 /////////////////////////////
 ///////// EVENT /////////////

@@ -13,25 +13,29 @@ const (
 
 type ComputeProvider interface {
 	SubmitJob(job *Job) error
-	//ListJobs(jobQueue string, status string) ([]Job, error)
-	//EventSummary(eventID uuid.UUID) ([]JobSummary, error)
 	Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error)
 	JobLog(submittedJobId string) ([]string, error)
 
-	//CreateJobDef
-	//AddCredential
+	//ListJobs(jobQueue string, status string) ([]Job, error)
+	//EventSummary(eventID uuid.UUID) ([]JobSummary, error)
 }
 
+/*
 type ResourceRequirement struct {
 	Type  ResourceType
 	Value string
 }
+*/
 
+//Overrides the container command or environment from the base values
+//provided in the job description
 type ContainerOverrides struct {
 	Command     []string
 	Environment []KeyValuePair
 }
 
+//This is a single "job" or unit of compute for a ComputeProvider
+//Essentually it is a mapping of a single Manifest
 type Job struct {
 	EventID            uuid.UUID
 	ManifestID         uuid.UUID
@@ -47,8 +51,12 @@ type Job struct {
 	SubmittedJob       *SubmitJobResult
 }
 
+//JobDependency is a graph dependency relationship.
+//When created for a manifest, the JobId value should be the manifestId. When a WatCompute
+//is run, WatCompute will map manifestIds to submitted JobIds as they are submitted and
+//handle the dependency mapping for the compute environment
 type JobDependency struct {
-	JobId string
+	JobId string //should be ManifestID when being added as a dependency in a Manifest
 }
 
 type SubmitJobResult struct {
