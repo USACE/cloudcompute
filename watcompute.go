@@ -27,6 +27,7 @@ func (wc *WatCompute) Run() error {
 	for wc.Events.HasNextEvent() {
 		event := wc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
+			env := append(manifest.Inputs.Environment, KeyValuePair{"MANIFEST_ID", manifest.ManifestID})
 			job := Job{
 				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", wc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      wc.JobQueue,
@@ -37,7 +38,7 @@ func (wc *WatCompute) Run() error {
 				RetryAttemts:  manifest.RetryAttemts,
 				JobTimeout:    manifest.JobTimeout,
 				ContainerOverrides: ContainerOverrides{
-					Environment: manifest.Inputs.Environment,
+					Environment: env,
 					Command:     manifest.Command,
 				},
 			}

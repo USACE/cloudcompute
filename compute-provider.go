@@ -16,6 +16,8 @@ type ComputeProvider interface {
 	Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error)
 	JobLog(submittedJobId string) ([]string, error)
 
+	//CreateJobDescription (jd *JobDescription) error
+
 	//ListJobs(jobQueue string, status string) ([]Job, error)
 	//EventSummary(eventID uuid.UUID) ([]JobSummary, error)
 }
