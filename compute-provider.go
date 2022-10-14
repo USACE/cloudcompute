@@ -17,19 +17,7 @@ type ComputeProvider interface {
 	JobLog(submittedJobId string) ([]string, error)
 	RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error)
 	UnregisterPlugin(nameAndRevision string) error
-
-	//CreateJobDescription (jd *JobDescription) error
-
-	//ListJobs(jobQueue string, status string) ([]Job, error)
-	//EventSummary(eventID uuid.UUID) ([]JobSummary, error)
 }
-
-/*
-type ResourceRequirement struct {
-	Type  ResourceType
-	Value string
-}
-*/
 
 //Overrides the container command or environment from the base values
 //provided in the job description
