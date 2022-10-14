@@ -16,6 +16,7 @@ import (
 var awsComputeProfile string = "wat_compute" //@TODO: get this from environment
 var awsLogGroup string = "/aws/batch/job"
 var ctx context.Context = context.Background()
+var executionRole string = "TestRole" //@TODO get from environment
 
 //AWS Batch Compute Provider implementation
 type AwsBatchProvider struct {
@@ -74,6 +75,51 @@ func (abp *AwsBatchProvider) SubmitJob(job *Job) error {
 	}
 
 	return nil
+}
+
+func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error) {
+	input := &batch.RegisterJobDefinitionInput{
+		JobDefinitionName: &plugin.Name,
+		Type:              types.JobDefinitionTypeContainer,
+		ContainerProperties: &types.ContainerProperties{
+			Command:          plugin.Command,
+			Environment:      kvpToBatchKvp(plugin.DefaultEnvironment),
+			ExecutionRoleArn: &executionRole,
+			Image:            &plugin.ImageAndTag,
+			//MountPoints:      volumesToBatch(plugin.Volumes),
+			//Volumes
+			ResourceRequirements: []types.ResourceRequirement{
+				{
+					Type:  types.ResourceTypeMemory,
+					Value: &plugin.ComputeEnvironment.Memory,
+				},
+				{
+					Type:  types.ResourceTypeVcpu,
+					Value: &plugin.ComputeEnvironment.VCPU,
+				},
+			},
+			Secrets: credsToBatchSecrets(plugin.Credentials),
+		},
+	}
+	output, err := abp.client.RegisterJobDefinition(ctx, input)
+	pro := PluginRegistrationOutput{}
+	if err == nil {
+		pro = PluginRegistrationOutput{
+			Name:         *output.JobDefinitionName,
+			ResourceName: *output.JobDefinitionArn,
+			Revision:     *output.Revision,
+		}
+	}
+	return pro, err
+}
+
+func (abp *AwsBatchProvider) UnregisterPlugin(nameAndRevision string) error {
+	dji := batch.DeregisterJobDefinitionInput{
+		JobDefinition: &nameAndRevision,
+	}
+	_, err := abp.client.DeregisterJobDefinition(ctx, &dji)
+	log.Printf("Unable to deregister AWS Batch Job: %s.  Error: %s\n", nameAndRevision, err)
+	return err
 }
 
 func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error) {
@@ -178,3 +224,60 @@ func listOutput2JobSummary(output *batch.ListJobsOutput) []JobSummary {
 	}
 	return js
 }
+
+func kvpToBatchKvp(kvps []KeyValuePair) []types.KeyValuePair {
+	bkvps := make([]types.KeyValuePair, len(kvps))
+	for i, kvp := range kvps {
+		name, value := kvp.Name, kvp.Value
+		bkvps[i] = types.KeyValuePair{
+			Name:  &name,
+			Value: &value,
+		}
+	}
+	return bkvps
+}
+
+func credsToBatchSecrets(creds []KeyValuePair) []types.Secret {
+	secrets := make([]types.Secret, len(creds))
+	for i, s := range creds {
+		nlocal, vlocal := s.Name, s.Value
+		secrets[i] = types.Secret{
+			Name:      &nlocal,
+			ValueFrom: &vlocal,
+		}
+	}
+	return secrets
+}
+
+func paramsMapToKvp(params map[string]string) []types.KeyValuePair {
+	pout := make([]types.KeyValuePair, len(params))
+	i := 0
+	for k, v := range params {
+		klocal, vlocal := k, v
+		pout[i] = types.KeyValuePair{
+			Name:  &klocal,
+			Value: &vlocal,
+		}
+		i++
+	}
+	return pout
+}
+
+/*
+func volumesToBatch(volumes []PluginComputeVolumes) ([]types.MountPoint, []types.Volume) {
+	mps := make([]types.MountPoint, len(volumes))
+	bvs:=make([]types.Volume,len(volumes))
+	for i, v := range volumes {
+		mps[i] = types.MountPoint{
+			ContainerPath: &v.MountPoint,
+			ReadOnly:      &v.ReadOnly,
+			SourceVolume:  &v.ResourceName,
+		}
+		bvs[i]=types.Volume{
+			Name: &v.Name,
+			EfsVolumeConfiguration: ,
+		}
+	}
+	return mps
+}
+*/

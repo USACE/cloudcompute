@@ -15,6 +15,8 @@ type ComputeProvider interface {
 	SubmitJob(job *Job) error
 	Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error)
 	JobLog(submittedJobId string) ([]string, error)
+	RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error)
+	UnregisterPlugin(nameAndRevision string) error
 
 	//CreateJobDescription (jd *JobDescription) error
 

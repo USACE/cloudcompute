@@ -1,7 +1,12 @@
 package watcompute
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/batch/types"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 /*
@@ -68,3 +73,104 @@ func TestGetBatchJobLog(t *testing.T) {
 	t.Log(log)
 }
 */
+
+func TestKvpToBatchKvp(t *testing.T) {
+	kvp := []KeyValuePair{
+		{
+			Name:  "Name1",
+			Value: "Value1",
+		},
+		{
+			Name:  "Name2",
+			Value: "Value2",
+		},
+	}
+	bkvp := kvpToBatchKvp(kvp)
+
+	validresult := []types.KeyValuePair{
+		{
+			Name:  aws.String("Name1"),
+			Value: aws.String("Value1"),
+		},
+		{
+			Name:  aws.String("Name2"),
+			Value: aws.String("Value2"),
+		},
+	}
+
+	if !reflect.DeepEqual(bkvp, validresult) {
+		t.Errorf("Expected %v got %v\n", printKvps(validresult), printKvps(bkvp))
+	}
+}
+
+func TestCredsToBatchSecrets(t *testing.T) {
+	creds := []KeyValuePair{
+		{
+			Name:  "Cred1",
+			Value: "Val1",
+		},
+		{
+			Name:  "Cred2",
+			Value: "Val2",
+		},
+	}
+
+	secrets := credsToBatchSecrets(creds)
+
+	validresult := []types.Secret{
+		{
+			Name:      aws.String("Cred1"),
+			ValueFrom: aws.String("Val1"),
+		},
+		{
+			Name:      aws.String("Cred2"),
+			ValueFrom: aws.String("Val2"),
+		},
+	}
+	if !reflect.DeepEqual(secrets, validresult) {
+		t.Errorf("Expected %v got %v\n", printSecrets(validresult), printSecrets(secrets))
+	}
+
+}
+
+func TestParamsMapToKvp(t *testing.T) {
+	params := map[string]string{
+		"Key1": "Val1",
+		"Key2": "Val2",
+	}
+
+	pkvp := paramsMapToKvp(params)
+
+	validresult := []types.KeyValuePair{
+		{
+			Name:  aws.String("Key1"),
+			Value: aws.String("Val1"),
+		},
+		{
+			Name:  aws.String("Key2"),
+			Value: aws.String("Val2"),
+		},
+	}
+
+	if !reflect.DeepEqual(pkvp, validresult) {
+		t.Errorf("Expected %s got %s\n", printKvps(validresult), printKvps(pkvp))
+	}
+}
+
+func printKvps(kvps []types.KeyValuePair) string {
+	s := "{"
+	for _, kvp := range kvps {
+		s += fmt.Sprintf("{Key: %s, Value %s}", *kvp.Name, *kvp.Value)
+	}
+	s += ("}\n")
+	return s
+}
+
+func printSecrets(secrets []types.Secret) string {
+	s := "{"
+	for _, secret := range secrets {
+		s += fmt.Sprintf("{Key: %s, Value %s}", *secret.Name, *secret.ValueFrom)
+	}
+	s += ("}\n")
+	return s
+}

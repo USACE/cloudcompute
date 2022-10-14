@@ -161,11 +161,19 @@ type Plugin struct {
 }
 
 type PluginComputeEnvironment struct {
-	VCPU   int
-	Memory int
+	VCPU   string
+	Memory string
 }
 
 type PluginComputeVolumes struct {
-	Name       string
-	MountPoint string //default is "/data"
+	Name         string
+	ResourceName string
+	ReadOnly     bool
+	MountPoint   string //default is "/data"
+}
+
+type PluginRegistrationOutput struct {
+	Name         string
+	ResourceName string
+	Revision     int32
 }
