@@ -9,6 +9,71 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
+func TestRegisterPlugin(t *testing.T) {
+	plugin := Plugin{
+		Name: "WAT_GO_UNIT_TEST",
+		//Revision:    "1",
+		ImageAndTag: "wat-test:0.07",
+		Description: "Unit test for WAT Plugin Registration",
+		Command:     []string{"/app/wattest"},
+		ComputeEnvironment: PluginComputeEnvironment{
+			VCPU:   "1",
+			Memory: "1024",
+		},
+		DefaultEnvironment: []KeyValuePair{
+			{
+				Name:  "WAT_AWS_DEFAULT_REGION",
+				Value: "us-east-1",
+			},
+			{
+				Name:  "WAT_AWS_S3_BUCKET",
+				Value: "mmc-storage-6",
+			},
+		},
+		Credentials: []KeyValuePair{
+			{
+				Name:  "WAT_AWS_ACCESS_KEY_ID",
+				Value: "arn:aws:secretsmanager:us-east-1:03",
+			},
+			{
+				Name:  "WAT_AWS_SECRET_ACCESS_KEY",
+				Value: "arn:aws:secretsmanager:us-east-1:03",
+			},
+		},
+	}
+
+	/*
+		d, err := yaml.Marshal(&plugin)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Print(string(d))
+	*/
+
+	compute, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	output, err := compute.RegisterPlugin(&plugin)
+	if err != nil {
+		t.Log(err)
+	}
+
+	t.Log(output)
+}
+
+func TestUnRegisterPlugin(t *testing.T) {
+	nameAndRevision := "WAT_GO_UNIT_TEST:1"
+	compute, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	err = compute.UnregisterPlugin(nameAndRevision)
+	if err != nil {
+		t.Log(err)
+	}
+}
+
 /*
 func TestSampleBatchJob(t *testing.T) {
 	job := BatchJob{

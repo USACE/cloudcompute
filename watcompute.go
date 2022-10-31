@@ -13,11 +13,11 @@ import (
 //The compute environment Job Queue and Job Definitions must exist before a WatCompute
 //can be initiated.
 type WatCompute struct {
-	ID              uuid.UUID
-	Name            string
-	JobQueue        string
-	Events          EventGenerator
-	ComputeProvider ComputeProvider
+	ID              uuid.UUID         `json:"id"`
+	Name            string            `json:"name"`
+	JobQueue        string            `json:"jobQueue"`
+	Events          EventGenerator    `json:"events"`
+	ComputeProvider ComputeProvider   `json:"computeProvider"`
 	submissionIdMap map[string]string //maps manifest id to submitted job identifier in the compute provider
 }
 
@@ -27,11 +27,11 @@ func (wc *WatCompute) Run() error {
 	for wc.Events.HasNextEvent() {
 		event := wc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
-			env := append(manifest.Inputs.Environment, KeyValuePair{"MANIFEST_ID", manifest.ManifestID})
+			env := append(manifest.Inputs.Environment, KeyValuePair{"WAT_MANIFEST_ID", manifest.ManifestID})
 			job := Job{
 				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", wc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      wc.JobQueue,
-				JobDefinition: manifest.JobDefinition,
+				JobDefinition: manifest.PluginDefinition,
 				DependsOn:     wc.mapDependencies(&manifest),
 				Parameters:    manifest.Inputs.Parameters,
 				Tags:          manifest.Tags,
@@ -95,24 +95,26 @@ func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
 //Manifest is the information necessary to execute a single job in an event
 //@TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
 type Manifest struct {
-	ManifestName  string            `yaml:"manifest_name"`
-	ManifestID    string            `yaml:"manifest_id,omitempty"`
-	Command       []string          `yaml:"command"`
-	Dependencies  []JobDependency   `yaml:"dependencies"`
-	Inputs        PluginInputs      `yaml:"inputs"`
-	Outputs       []DataSource      `yaml:"outputs"`
-	JobDefinition string            `yaml:"job_definition"`
-	Tags          map[string]string `yaml:"tags"`
-	RetryAttemts  int32             `yaml:"retry_attempts"`
-	JobTimeout    int32             `yaml:"job_timeout"`
+	ManifestName     string            `yaml:"manifest_name" json:"manifest_name"`
+	ManifestID       string            `yaml:"manifest_id,omitempty" json:"manifest_id"`
+	Command          []string          `yaml:"command" json:"command" `
+	Dependencies     []JobDependency   `yaml:"dependencies" json:"dependencies"`
+	Inputs           PluginInputs      `yaml:"inputs" json:"inputs"`
+	Outputs          []DataSource      `yaml:"outputs" json:"outputs"`
+	PluginDefinition string            `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
+	Tags             map[string]string `yaml:"tags" json:"tags"`
+	RetryAttemts     int32             `yaml:"retry_attempts" json:"retry_attempts"`
+	JobTimeout       int32             `yaml:"job_timeout" json:"job_timeout"`
 }
+
+//JobDefinition string            `yaml:"job_definition"`
 
 //Job level inputs that can be injected into a container
 type PluginInputs struct {
-	Environment       []KeyValuePair
-	Parameters        map[string]string
-	DataSources       []DataSource
-	PayloadAttributes map[string]interface{}
+	Environment       []KeyValuePair         `json:"environment"`
+	Parameters        map[string]string      `json:"parameters"`
+	DataSources       []DataSource           `json:"dataSources"`
+	PayloadAttributes map[string]interface{} `json:"payloadAttributes"`
 }
 
 /////////////////////////////
@@ -120,9 +122,9 @@ type PluginInputs struct {
 
 //EVENT is a single run through the DAG
 type Event struct {
-	ID          uuid.UUID
-	EventNumber int64 //optional
-	Manifests   []Manifest
+	ID          uuid.UUID  `json:"id"`
+	EventNumber int64      `json:"event_number"` //optional
+	Manifests   []Manifest `json:"manifests"`
 }
 
 //Adds a manifest to the Event
@@ -139,37 +141,35 @@ func (e *Event) AddManifestAt(m Manifest, i int) {
 /////////////////////////////
 ///////// PLUGIN ////////////
 
-//@Will Plugin concepts gets moved to the API that creates job definitions.  WATCOMPUTE
-//is a library for running job descriptions that already exist
-
-//Plugin struct is used to interact with the compute environment and create a Job Description
+//Plugin struct is used to interact with the compute environment and create a Job Definition
 //this is likely going to be moved to the WATAPI.
 //When entering credentials, use the format of the compute provider.
 //For example when using AWS Batch: "AWS_ACCESS_KEY_ID", "arn:aws:secretsmanager:us-east-1:01010101010:secret:mysecret:AWS_ACCESS_KEY_ID::
 type Plugin struct {
-	Name               string `json:"name" yaml:"name"`
-	Version            string
-	ImageAndTag        string `json:"image_and_tag" yaml:"image_and_tag"`
-	Description        string
-	Command            []string `json:"command" yaml:"command"`
-	ComputeEnvironment PluginComputeEnvironment
-	DefaultEnvironment []KeyValuePair //default values for the container environment
-	Volumes            []PluginComputeVolumes
-	Credentials        []KeyValuePair
-	Parameters         map[string]string
-	RetryAttemts       int32
+	//ID                 uuid.UUID
+	Name string `json:"name" yaml:"name"`
+	//Revision           string                   `json:"revision" yaml:"revision"`
+	ImageAndTag        string                   `json:"image_and_tag" yaml:"image_and_tag"`
+	Description        string                   `json:"description" yaml:"description"`
+	Command            []string                 `json:"command" yaml:"command"`
+	ComputeEnvironment PluginComputeEnvironment `json:"compute_environment" yaml:"compute_environment"`
+	DefaultEnvironment []KeyValuePair           `json:"environment" yaml:"environment"` //default values for the container environment
+	Volumes            []PluginComputeVolumes   `json:"volumes" yaml:"volumes"`
+	Credentials        []KeyValuePair           `json:"credentials" yaml:"credentials"`
+	Parameters         map[string]string        `json:"parameters" yaml:"parameters"`
+	RetryAttemts       int32                    `json:"retry_attempts" yaml:"retry_attempts"`
 }
 
 type PluginComputeEnvironment struct {
-	VCPU   string
-	Memory string
+	VCPU   string `json:"vcpu" yaml:"vcpu"`
+	Memory string `json:"memory" yaml:"memory"`
 }
 
 type PluginComputeVolumes struct {
-	Name         string
-	ResourceName string
-	ReadOnly     bool
-	MountPoint   string //default is "/data"
+	Name         string `json:"name" yaml:"name"`
+	ResourceName string `json:"resource_name" yaml:"resource_name"`
+	ReadOnly     bool   `json:"read_only" yaml:"read_only"`
+	MountPoint   string `json:"mount_point" yaml:"mount_point"` //default is "/data"
 }
 
 type PluginRegistrationOutput struct {

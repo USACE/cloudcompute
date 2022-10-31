@@ -1,6 +1,7 @@
 package watcompute
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -24,34 +25,34 @@ func TestSingleEvent(t *testing.T) {
 			ID: uuid.New(),
 			Manifests: []Manifest{
 				{
-					ManifestName:  "MANIFEST3",
-					ManifestID:    m3id,
-					Dependencies:  []JobDependency{{m2id}},
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MANIFEST3",
+					ManifestID:       m3id,
+					Dependencies:     []JobDependency{{m2id}},
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 				{
-					ManifestName:  "MANIFEST4",
-					ManifestID:    m4id,
-					Dependencies:  []JobDependency{{m1id}, {m3id}},
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MANIFEST4",
+					ManifestID:       m4id,
+					Dependencies:     []JobDependency{{m1id}, {m3id}},
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 				{
-					ManifestName:  "MANIFEST5",
-					ManifestID:    m5id,
-					Dependencies:  []JobDependency{{m2id}, {m3id}},
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MANIFEST5",
+					ManifestID:       m5id,
+					Dependencies:     []JobDependency{{m2id}, {m3id}},
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 				{
-					ManifestName:  "MANIFEST1",
-					ManifestID:    m1id,
-					Dependencies:  []JobDependency{},
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MANIFEST1",
+					ManifestID:       m1id,
+					Dependencies:     []JobDependency{},
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 				{
-					ManifestName:  "MANIFEST2",
-					ManifestID:    m2id,
-					Dependencies:  []JobDependency{{m1id}},
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MANIFEST2",
+					ManifestID:       m2id,
+					Dependencies:     []JobDependency{{m1id}},
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 			},
 		},
@@ -86,9 +87,9 @@ func TestSimpleEvents(t *testing.T) {
 			ID: uuid.New(),
 			Manifests: []Manifest{
 				{
-					ManifestName:  "MMC_TIMING_PLUGIN",
-					ManifestID:    uuid.New().String(),
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MMC_TIMING_PLUGIN",
+					ManifestID:       uuid.New().String(),
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 			},
 		},
@@ -96,9 +97,9 @@ func TestSimpleEvents(t *testing.T) {
 			ID: uuid.New(),
 			Manifests: []Manifest{
 				{
-					ManifestName:  "MMC_TIMING_PLUGIN",
-					ManifestID:    uuid.New().String(),
-					JobDefinition: "wat-ras-unsteady2:1",
+					ManifestName:     "MMC_TIMING_PLUGIN",
+					ManifestID:       uuid.New().String(),
+					PluginDefinition: "wat-ras-unsteady2:1",
 				},
 			},
 		},
@@ -133,9 +134,9 @@ func TestSingleJobEnvAndCommand(t *testing.T) {
 			ID: uuid.New(),
 			Manifests: []Manifest{
 				{
-					ManifestName:  "MANIFEST1",
-					ManifestID:    m1id,
-					JobDefinition: "WAT-ECHO-TEST2:2",
+					ManifestName:     "MANIFEST1",
+					ManifestID:       m1id,
+					PluginDefinition: "WAT-ECHO-TEST2:2",
 					Inputs: PluginInputs{
 						Environment: []KeyValuePair{
 							{
@@ -188,7 +189,7 @@ func TestMmcTimingViaEnv(t *testing.T) {
 					ManifestName: "MMC-TIMING-TEST",
 					ManifestID:   m1id,
 
-					JobDefinition: "WAT-MMC-TIMING:2",
+					PluginDefinition: "WAT-MMC-TIMING:2",
 					Inputs: PluginInputs{
 						Environment: []KeyValuePair{
 							{
@@ -253,6 +254,86 @@ func TestMmcTimingViaEnv(t *testing.T) {
 
 }
 
+func TestMmcTimingViaEnvOptima(t *testing.T) {
+	computeProvider, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	m1id := uuid.New().String()
+
+	events := []Event{
+		{
+			ID: uuid.New(),
+			Manifests: []Manifest{
+				{
+					ManifestName: "MMC-TIMING-TEST",
+					ManifestID:   m1id,
+
+					PluginDefinition: "WAT-MMC-TIMING:2",
+					Inputs: PluginInputs{
+						Environment: []KeyValuePair{
+							{
+								Name:  "MMC_FAIL_PLAN",
+								Value: "Optima_MMC.p08.hdf",
+							},
+							{
+								Name:  "MMC_NO_FAIL_PLAN",
+								Value: "Optima_MMC.p11.hdf",
+							},
+							{
+								Name:  "MMC_BREACH_TIME",
+								Value: "08FEB2099 13:50:00",
+							},
+							{
+								Name:  "MMC_SCENARIO",
+								Value: "ILDP",
+							},
+							{
+								Name:  "MMC_DELTA",
+								Value: "2.0",
+							},
+							{
+								Name:  "MMC_S3_ROOT",
+								Value: "/adrian_christopher_test/Optima_Dam_OK20510",
+							},
+							{
+								Name:  "RASLIBCMD",
+								Value: "/app/raslib",
+							},
+							{
+								Name:  "AWS_REGION",
+								Value: "us-east-1",
+							},
+							{
+								Name:  "AWS_BUCKET",
+								Value: "mmc-storage-6",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	computeID := uuid.New()
+	compute := WatCompute{
+		Name:            "WAT_COMPUTE1",
+		ID:              computeID,
+		JobQueue:        "WAT-QUEUE3",
+		Events:          NewEventList(events),
+		ComputeProvider: computeProvider,
+	}
+
+	err = compute.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	waitAndPrintStatus(&compute, t)
+	printLogs(&compute, []string{m1id}, t)
+
+}
+
 func TestSingleJobParameters(t *testing.T) {
 	computeProvider, err := NewAwsBatchProvider()
 	if err != nil {
@@ -268,7 +349,7 @@ func TestSingleJobParameters(t *testing.T) {
 					ManifestName: "MANIFEST1",
 					ManifestID:   m1id,
 
-					JobDefinition: "WAT-ECHO-TEST2:2",
+					PluginDefinition: "WAT-ECHO-TEST2:2",
 					Inputs: PluginInputs{
 						Environment: []KeyValuePair{
 							{
@@ -305,6 +386,79 @@ func TestSingleJobParameters(t *testing.T) {
 
 }
 
+func TestMmcTimingJson(t *testing.T) {
+	computeProvider, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	m1id := uuid.New().String()
+
+	events := []Event{
+		{
+			ID: uuid.New(),
+			Manifests: []Manifest{
+				{
+					ManifestName: "MMC-TIMING-TEST",
+					ManifestID:   m1id,
+
+					PluginDefinition: "WAT-MMC-TIMING:2",
+					Inputs: PluginInputs{
+						Environment: []KeyValuePair{
+							{
+								Name:  "MMC_FAIL_PLAN",
+								Value: "BirchLakeDam.p10.hdf",
+							},
+							{
+								Name:  "MMC_NO_FAIL_PLAN",
+								Value: "BirchLakeDam.p09.hdf",
+							},
+							{
+								Name:  "MMC_BREACH_TIME",
+								Value: "05FEB2099 01:25:00",
+							},
+							{
+								Name:  "MMC_SCENARIO",
+								Value: "TW1",
+							},
+							{
+								Name:  "MMC_DELTA",
+								Value: "2.0",
+							},
+							{
+								Name:  "MMC_S3_ROOT",
+								Value: "/adrian_christopher_test/Birch_Lake_Dam",
+							},
+							{
+								Name:  "RASLIBCMD",
+								Value: "/app/raslib",
+							},
+							{
+								Name:  "AWS_REGION",
+								Value: "us-east-1",
+							},
+							{
+								Name:  "AWS_BUCKET",
+								Value: "mmc-storage-6",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	computeID := uuid.New()
+	compute := WatCompute{
+		Name:            "WAT_COMPUTE1",
+		ID:              computeID,
+		JobQueue:        "WAT-QUEUE3",
+		Events:          NewEventList(events),
+		ComputeProvider: computeProvider,
+	}
+
+	json, err := json.Marshal(compute)
+	fmt.Println(string(json))
+}
+
 func TestSingleJobTags(t *testing.T) {
 	computeProvider, err := NewAwsBatchProvider()
 	if err != nil {
@@ -317,13 +471,52 @@ func TestSingleJobTags(t *testing.T) {
 			ID: uuid.New(),
 			Manifests: []Manifest{
 				{
-					ManifestName:  "MANIFEST1",
-					ManifestID:    m1id,
-					JobDefinition: "WAT-ECHO-TEST3:1",
+					ManifestName:     "MANIFEST1",
+					ManifestID:       m1id,
+					PluginDefinition: "WAT-ECHO-TEST3:1",
 					Tags: map[string]string{
 						"TAG1": "This is TAG1",
 						"TAG2": "This is TAG2",
 					},
+				},
+			},
+		},
+	}
+
+	computeID := uuid.New()
+	compute := WatCompute{
+		Name:            "WAT_COMPUTE1",
+		ID:              computeID,
+		JobQueue:        "WAT-QUEUE3",
+		Events:          NewEventList(events),
+		ComputeProvider: computeProvider,
+	}
+
+	err = compute.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	waitAndPrintStatus(&compute, t)
+	printLogs(&compute, []string{m1id}, t)
+
+}
+
+func TestSingleJobWatSDK(t *testing.T) {
+	computeProvider, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	m1id := uuid.New().String()
+
+	events := []Event{
+		{
+			ID: uuid.New(),
+			Manifests: []Manifest{
+				{
+					ManifestName:     "MANIFEST1",
+					ManifestID:       m1id,
+					PluginDefinition: "WAG-GO-TEST3:7",
 				},
 			},
 		},

@@ -16,7 +16,7 @@ import (
 var awsComputeProfile string = "wat_compute" //@TODO: get this from environment
 var awsLogGroup string = "/aws/batch/job"
 var ctx context.Context = context.Background()
-var executionRole string = "TestRole" //@TODO get from environment
+var executionRole string = "arn:aws:iam::038611608639:role/ecsTaskExecutionRole" //@TODO get from environment
 
 //AWS Batch Compute Provider implementation
 type AwsBatchProvider struct {

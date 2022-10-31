@@ -25,4 +25,5 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/usace/filestore v0.0.0-20220311141535-9ec1e86b5058 // indirect
 	github.com/usace/wat-go v0.0.0-20221011202729-b0a0942107b7 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
