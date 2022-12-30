@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
-//WatCompute is a compute submission for a single dag for a set of events
-//The compute environment Job Queue and Job Definitions must exist before a WatCompute
-//can be initiated.
+// WatCompute is a compute submission for a single dag for a set of events
+// The compute environment Job Queue and Job Definitions must exist before a WatCompute
+// can be initiated.
 type WatCompute struct {
 	ID              uuid.UUID         `json:"id"`
 	Name            string            `json:"name"`
@@ -21,13 +21,16 @@ type WatCompute struct {
 	submissionIdMap map[string]string //maps manifest id to submitted job identifier in the compute provider
 }
 
-//Runs a WatCompute on the ComputeProvider
+// Runs a WatCompute on the ComputeProvider
 func (wc *WatCompute) Run() error {
 	wc.submissionIdMap = make(map[string]string)
 	for wc.Events.HasNextEvent() {
 		event := wc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
-			env := append(manifest.Inputs.Environment, KeyValuePair{"WAT_MANIFEST_ID", manifest.ManifestID})
+			env := append(manifest.Inputs.Environment, KeyValuePair{WatManifestId, manifest.ManifestID})
+			env = append(manifest.Inputs.Environment, KeyValuePair{WatEventID, event.ID.String()})
+			env = append(manifest.Inputs.Environment, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
+			env = append(manifest.Inputs.Environment, KeyValuePair{WatPluginDefinition, manifest.PluginDefinition})
 			job := Job{
 				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", wc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      wc.JobQueue,
@@ -59,12 +62,12 @@ Note: if a manifest submission in an event fails, then what should plan be:
    - b) skip the event, log that it failed to submit, then move on to the next one?
 */
 
-//Requests the status of a given compute at the COMPUTE, EVENT, or JOB level
+// Requests the status of a given compute at the COMPUTE, EVENT, or JOB level
 func (wc *WatCompute) Status(query JobsSummaryQuery) ([]JobSummary, error) {
 	return wc.ComputeProvider.Status(wc.JobQueue, query)
 }
 
-//Requests the run log for a manifest
+// Requests the run log for a manifest
 func (wc *WatCompute) Log(manifestId string) ([]string, error) {
 	if submittedJobId, ok := wc.submissionIdMap[manifestId]; ok {
 		return wc.ComputeProvider.JobLog(submittedJobId)
@@ -72,13 +75,13 @@ func (wc *WatCompute) Log(manifestId string) ([]string, error) {
 	return nil, errors.New(fmt.Sprintf("Invalid Manifest ID: %v", manifestId))
 }
 
-//Cancels the entire wat compute includening jobs submitted to compute environment and
-//events in the WatCompute which have not been submitted to the compute provider
+// Cancels the entire wat compute includening jobs submitted to compute environment and
+// events in the WatCompute which have not been submitted to the compute provider
 func (wc *WatCompute) Cancel() error {
 	return errors.New("Not implemented")
 }
 
-//Maps the WAT Dependency identifiers to the compute environment identifiers received from submitted jobs.
+// Maps the WAT Dependency identifiers to the compute environment identifiers received from submitted jobs.
 func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
 	sdeps := make([]JobDependency, len(manifest.Dependencies))
 	for i, d := range manifest.Dependencies {
@@ -92,8 +95,8 @@ func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
 /////////////////////////////
 //////// MANIFEST ///////////
 
-//Manifest is the information necessary to execute a single job in an event
-//@TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
+// Manifest is the information necessary to execute a single job in an event
+// @TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
 type Manifest struct {
 	ManifestName     string            `yaml:"manifest_name" json:"manifest_name"`
 	ManifestID       string            `yaml:"manifest_id,omitempty" json:"manifest_id"`
@@ -109,7 +112,7 @@ type Manifest struct {
 
 //JobDefinition string            `yaml:"job_definition"`
 
-//Job level inputs that can be injected into a container
+// Job level inputs that can be injected into a container
 type PluginInputs struct {
 	Environment       []KeyValuePair         `json:"environment"`
 	Parameters        map[string]string      `json:"parameters"`
@@ -120,19 +123,19 @@ type PluginInputs struct {
 /////////////////////////////
 ///////// EVENT /////////////
 
-//EVENT is a single run through the DAG
+// EVENT is a single run through the DAG
 type Event struct {
 	ID          uuid.UUID  `json:"id"`
-	EventNumber int64      `json:"event_number"` //optional
+	EventNumber int64      `json:"event_number"`
 	Manifests   []Manifest `json:"manifests"`
 }
 
-//Adds a manifest to the Event
+// Adds a manifest to the Event
 func (e *Event) AddManifest(m Manifest) {
 	e.Manifests = append(e.Manifests, m)
 }
 
-//Adds a manifest at a specific ordinal position in the event.
+// Adds a manifest at a specific ordinal position in the event.
 func (e *Event) AddManifestAt(m Manifest, i int) {
 	e.Manifests = append(e.Manifests[:i+1], e.Manifests[i:]...)
 	e.Manifests[i] = m
@@ -141,10 +144,10 @@ func (e *Event) AddManifestAt(m Manifest, i int) {
 /////////////////////////////
 ///////// PLUGIN ////////////
 
-//Plugin struct is used to interact with the compute environment and create a Job Definition
-//this is likely going to be moved to the WATAPI.
-//When entering credentials, use the format of the compute provider.
-//For example when using AWS Batch: "AWS_ACCESS_KEY_ID", "arn:aws:secretsmanager:us-east-1:01010101010:secret:mysecret:AWS_ACCESS_KEY_ID::
+// Plugin struct is used to interact with the compute environment and create a Job Definition
+// this is likely going to be moved to the WATAPI.
+// When entering credentials, use the format of the compute provider.
+// For example when using AWS Batch: "AWS_ACCESS_KEY_ID", "arn:aws:secretsmanager:us-east-1:01010101010:secret:mysecret:AWS_ACCESS_KEY_ID::
 type Plugin struct {
 	//ID                 uuid.UUID
 	Name string `json:"name" yaml:"name"`

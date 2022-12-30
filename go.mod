@@ -3,11 +3,12 @@ module watcompute
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.96
+	github.com/aws/aws-sdk-go v1.44.170
 	github.com/aws/aws-sdk-go-v2/config v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/batch v1.18.14
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.15.19
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.3.0
+	github.com/usace/wat-go v0.0.0-20221230145843-9512a85d6222
 )
 
 require (
@@ -24,6 +25,4 @@ require (
 	github.com/aws/smithy-go v1.13.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/usace/filestore v0.0.0-20220311141535-9ec1e86b5058 // indirect
-	github.com/usace/wat-go v0.0.0-20221011202729-b0a0942107b7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
