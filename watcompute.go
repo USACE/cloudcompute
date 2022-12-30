@@ -28,9 +28,9 @@ func (wc *WatCompute) Run() error {
 		event := wc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
 			env := append(manifest.Inputs.Environment, KeyValuePair{WatManifestId, manifest.ManifestID})
-			env = append(manifest.Inputs.Environment, KeyValuePair{WatEventID, event.ID.String()})
-			env = append(manifest.Inputs.Environment, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
-			env = append(manifest.Inputs.Environment, KeyValuePair{WatPluginDefinition, manifest.PluginDefinition})
+			env = append(env, KeyValuePair{WatEventID, event.ID.String()})
+			env = append(env, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
+			env = append(env, KeyValuePair{WatPluginDefinition, manifest.PluginDefinition})
 			job := Job{
 				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", wc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      wc.JobQueue,
