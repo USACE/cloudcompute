@@ -1,4 +1,4 @@
-package watcompute
+package cloudcompute
 
 import (
 	"errors"
@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// WatCompute is a compute submission for a single dag for a set of events
-// The compute environment Job Queue and Job Definitions must exist before a WatCompute
+// CloudCompute is a compute submission for a single dag for a set of events
+// The compute environment Job Queue and Job Definitions must exist before a CloudCompute
 // can be initiated.
-type WatCompute struct {
+type CloudCompute struct {
 	ID              uuid.UUID         `json:"id"`
 	Name            string            `json:"name"`
 	JobQueue        string            `json:"jobQueue"`
@@ -22,20 +22,20 @@ type WatCompute struct {
 }
 
 // Runs a WatCompute on the ComputeProvider
-func (wc *WatCompute) Run() error {
-	wc.submissionIdMap = make(map[string]string)
-	for wc.Events.HasNextEvent() {
-		event := wc.Events.NextEvent()
+func (cc *CloudCompute) Run() error {
+	cc.submissionIdMap = make(map[string]string)
+	for cc.Events.HasNextEvent() {
+		event := cc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
 			env := append(manifest.Inputs.Environment, KeyValuePair{WatManifestId, manifest.ManifestID})
 			env = append(env, KeyValuePair{WatEventID, event.ID.String()})
 			env = append(env, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
 			env = append(env, KeyValuePair{WatPluginDefinition, manifest.PluginDefinition})
 			job := Job{
-				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", wc.ID.String(), event.ID.String(), manifest.ManifestID),
-				JobQueue:      wc.JobQueue,
+				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", cc.ID.String(), event.ID.String(), manifest.ManifestID),
+				JobQueue:      cc.JobQueue,
 				JobDefinition: manifest.PluginDefinition,
-				DependsOn:     wc.mapDependencies(&manifest),
+				DependsOn:     cc.mapDependencies(&manifest),
 				Parameters:    manifest.Inputs.Parameters,
 				Tags:          manifest.Tags,
 				RetryAttemts:  manifest.RetryAttemts,
@@ -45,11 +45,11 @@ func (wc *WatCompute) Run() error {
 					Command:     manifest.Command,
 				},
 			}
-			err := wc.ComputeProvider.SubmitJob(&job)
+			err := cc.ComputeProvider.SubmitJob(&job)
 			if err != nil {
 				return err //@TODO what happens if a set submit ok then one fails?  How do we cancel? See notes below
 			}
-			wc.submissionIdMap[manifest.ManifestID] = *job.SubmittedJob.JobId
+			cc.submissionIdMap[manifest.ManifestID] = *job.SubmittedJob.JobId
 		}
 	}
 	return nil
@@ -63,29 +63,29 @@ Note: if a manifest submission in an event fails, then what should plan be:
 */
 
 // Requests the status of a given compute at the COMPUTE, EVENT, or JOB level
-func (wc *WatCompute) Status(query JobsSummaryQuery) ([]JobSummary, error) {
-	return wc.ComputeProvider.Status(wc.JobQueue, query)
+func (cc *CloudCompute) Status(query JobsSummaryQuery) ([]JobSummary, error) {
+	return cc.ComputeProvider.Status(cc.JobQueue, query)
 }
 
 // Requests the run log for a manifest
-func (wc *WatCompute) Log(manifestId string) ([]string, error) {
-	if submittedJobId, ok := wc.submissionIdMap[manifestId]; ok {
-		return wc.ComputeProvider.JobLog(submittedJobId)
+func (cc *CloudCompute) Log(manifestId string) ([]string, error) {
+	if submittedJobId, ok := cc.submissionIdMap[manifestId]; ok {
+		return cc.ComputeProvider.JobLog(submittedJobId)
 	}
 	return nil, errors.New(fmt.Sprintf("Invalid Manifest ID: %v", manifestId))
 }
 
 // Cancels the entire wat compute includening jobs submitted to compute environment and
 // events in the WatCompute which have not been submitted to the compute provider
-func (wc *WatCompute) Cancel() error {
+func (cc *CloudCompute) Cancel() error {
 	return errors.New("Not implemented")
 }
 
 // Maps the WAT Dependency identifiers to the compute environment identifiers received from submitted jobs.
-func (wc *WatCompute) mapDependencies(manifest *Manifest) []JobDependency {
+func (cc *CloudCompute) mapDependencies(manifest *Manifest) []JobDependency {
 	sdeps := make([]JobDependency, len(manifest.Dependencies))
 	for i, d := range manifest.Dependencies {
-		if sdep, ok := wc.submissionIdMap[d.JobId]; ok {
+		if sdep, ok := cc.submissionIdMap[d.JobId]; ok {
 			sdeps[i] = JobDependency{sdep}
 		}
 	}

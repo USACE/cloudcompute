@@ -1,4 +1,4 @@
-package watcompute
+package cloudcompute
 
 import (
 	"fmt"
@@ -12,6 +12,50 @@ import (
 func TestRegisterPlugin(t *testing.T) {
 	plugin := Plugin{
 		Name: "WAT_GO_UNIT_TEST",
+		//Revision:    "1",
+		ImageAndTag: "038611608639.dkr.ecr.us-east-1.amazonaws.com/compute-plugins:seed-generator-0.01",
+		Description: "Seed Generator",
+		ComputeEnvironment: PluginComputeEnvironment{
+			VCPU:   "1",
+			Memory: "512",
+		},
+		DefaultEnvironment: []KeyValuePair{
+			{
+				Name:  "WAT_AWS_DEFAULT_REGION",
+				Value: "us-east-1",
+			},
+			{
+				Name:  "WAT_AWS_S3_BUCKET",
+				Value: "mmc-storage-6",
+			},
+		},
+		Credentials: []KeyValuePair{
+			{
+				Name:  "WAT_AWS_ACCESS_KEY_ID",
+				Value: "arn:aws:secretsmanager:us-east-1:03",
+			},
+			{
+				Name:  "WAT_AWS_SECRET_ACCESS_KEY",
+				Value: "arn:aws:secretsmanager:us-east-1:03",
+			},
+		},
+	}
+
+	compute, err := NewAwsBatchProvider()
+	if err != nil {
+		t.Log(err)
+	}
+	output, err := compute.RegisterPlugin(&plugin)
+	if err != nil {
+		t.Log(err)
+	}
+
+	t.Log(output)
+}
+
+func TestRegisterSeedGeneratorPlugin(t *testing.T) {
+	plugin := Plugin{
+		Name: "WAT_TEST",
 		//Revision:    "1",
 		ImageAndTag: "wat-test:0.07",
 		Description: "Unit test for WAT Plugin Registration",
@@ -41,14 +85,6 @@ func TestRegisterPlugin(t *testing.T) {
 			},
 		},
 	}
-
-	/*
-		d, err := yaml.Marshal(&plugin)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Print(string(d))
-	*/
 
 	compute, err := NewAwsBatchProvider()
 	if err != nil {

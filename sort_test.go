@@ -1,4 +1,4 @@
-package watcompute
+package cloudcompute
 
 import (
 	"fmt"

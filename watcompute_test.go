@@ -1,4 +1,4 @@
-package watcompute
+package cloudcompute
 
 import (
 	"encoding/json"
@@ -59,7 +59,7 @@ func TestSingleEvent(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -106,7 +106,7 @@ func TestSimpleEvents(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -156,7 +156,7 @@ func TestSingleJobEnvAndCommand(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -225,7 +225,7 @@ func TestMmcTimingViaEnv(t *testing.T) {
 								Value: "us-east-1",
 							},
 							{
-								Name:  "AWS_BUCKET",
+								Name:  "AWS_S3_BUCKET",
 								Value: "mmc-storage-6",
 							},
 						},
@@ -236,7 +236,7 @@ func TestMmcTimingViaEnv(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -316,7 +316,7 @@ func TestMmcTimingViaEnvOptima(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -368,7 +368,7 @@ func TestSingleJobParameters(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -447,7 +447,7 @@ func TestMmcTimingJson(t *testing.T) {
 		},
 	}
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -484,7 +484,7 @@ func TestSingleJobTags(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -523,7 +523,7 @@ func TestSingleJobWatSDK(t *testing.T) {
 	}
 
 	computeID := uuid.New()
-	compute := WatCompute{
+	compute := CloudCompute{
 		Name:            "WAT_COMPUTE1",
 		ID:              computeID,
 		JobQueue:        "WAT-QUEUE3",
@@ -541,7 +541,7 @@ func TestSingleJobWatSDK(t *testing.T) {
 
 }
 
-func printLogs(compute *WatCompute, manifestIds []string, t *testing.T) {
+func printLogs(compute *CloudCompute, manifestIds []string, t *testing.T) {
 	for _, m := range manifestIds {
 		fmt.Printf("-------------- %s --------------\n", m)
 		logs, err := compute.Log(m)
@@ -554,7 +554,7 @@ func printLogs(compute *WatCompute, manifestIds []string, t *testing.T) {
 	}
 }
 
-func waitAndPrintStatus(compute *WatCompute, t *testing.T) {
+func waitAndPrintStatus(compute *CloudCompute, t *testing.T) {
 	query := JobsSummaryQuery{SUMMARY_COMPUTE, compute.ID.String()}
 	for {
 		statuses, err := compute.Status(query)
