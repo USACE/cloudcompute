@@ -13,21 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-var awsComputeProfile string = "wat_compute" //@TODO: get this from environment
 var awsLogGroup string = "/aws/batch/job"
 var ctx context.Context = context.Background()
-var executionRole string = "arn:aws:iam::038611608639:role/ecsTaskExecutionRole" //@TODO get from environment
+
+type AwsBatchProviderInput struct {
+	ExecutionRole string
+	BatchRegion   string
+	ConfigProfile string
+}
 
 //AWS Batch Compute Provider implementation
 type AwsBatchProvider struct {
-	client *batch.Client
-	logs   *cloudwatchlogs.Client
+	client        *batch.Client
+	logs          *cloudwatchlogs.Client
+	executionRole string
 }
 
-func NewAwsBatchProvider() (*AwsBatchProvider, error) {
+func NewAwsBatchProvider(input AwsBatchProviderInput) (*AwsBatchProvider, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion("us-east-1"),
-		config.WithSharedConfigProfile(awsComputeProfile))
+		config.WithRegion(input.BatchRegion),
+		config.WithSharedConfigProfile(input.ConfigProfile))
 	if err != nil {
 		log.Println("Failed to load an AWS Config")
 		return nil, err
@@ -36,7 +41,7 @@ func NewAwsBatchProvider() (*AwsBatchProvider, error) {
 	svc := batch.NewFromConfig(cfg)
 	logs := cloudwatchlogs.NewFromConfig(cfg)
 
-	return &AwsBatchProvider{svc, logs}, nil
+	return &AwsBatchProvider{svc, logs, input.ExecutionRole}, nil
 }
 
 func (abp *AwsBatchProvider) SubmitJob(job *Job) error {
@@ -84,7 +89,7 @@ func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationO
 		ContainerProperties: &types.ContainerProperties{
 			Command:          plugin.Command,
 			Environment:      kvpToBatchKvp(plugin.DefaultEnvironment),
-			ExecutionRoleArn: &executionRole,
+			ExecutionRoleArn: &abp.executionRole,
 			Image:            &plugin.ImageAndTag,
 			//MountPoints:      volumesToBatch(plugin.Volumes),
 			//Volumes

@@ -3,6 +3,7 @@ package cloudcompute
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	. "github.com/usace/wat-go"
 
@@ -27,6 +28,22 @@ func (cc *CloudCompute) Run() error {
 	for cc.Events.HasNextEvent() {
 		event := cc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
+			if len(manifest.Inputs.PayloadAttributes) > 0 || len(manifest.Inputs.DataSources) > 0 {
+				computeStore, err := NewWatStore(manifest.ManifestID)
+				if err != nil {
+					return err
+				}
+				p := Payload{
+					Attributes: manifest.Inputs.PayloadAttributes,
+					Stores:     manifest.Stores,
+					Inputs:     manifest.Inputs.DataSources,
+					Outputs:    manifest.Outputs,
+				}
+				err = computeStore.SetPayload(p)
+				if err != nil {
+					log.Fatalf("Unable to set payload: %s", err)
+				}
+			}
 			env := append(manifest.Inputs.Environment, KeyValuePair{WatManifestId, manifest.ManifestID})
 			env = append(env, KeyValuePair{WatEventID, event.ID.String()})
 			env = append(env, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
@@ -102,6 +119,7 @@ type Manifest struct {
 	ManifestID       string            `yaml:"manifest_id,omitempty" json:"manifest_id"`
 	Command          []string          `yaml:"command" json:"command" `
 	Dependencies     []JobDependency   `yaml:"dependencies" json:"dependencies"`
+	Stores           []DataStoreDef    `yaml:"stores" json:"stores"`
 	Inputs           PluginInputs      `yaml:"inputs" json:"inputs"`
 	Outputs          []DataSource      `yaml:"outputs" json:"outputs"`
 	PluginDefinition string            `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
