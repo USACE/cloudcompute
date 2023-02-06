@@ -119,7 +119,7 @@ type Manifest struct {
 	ManifestID       string            `yaml:"manifest_id,omitempty" json:"manifest_id"`
 	Command          []string          `yaml:"command" json:"command" `
 	Dependencies     []JobDependency   `yaml:"dependencies" json:"dependencies"`
-	Stores           []DataStoreDef    `yaml:"stores" json:"stores"`
+	Stores           []DataStore       `yaml:"stores" json:"stores"`
 	Inputs           PluginInputs      `yaml:"inputs" json:"inputs"`
 	Outputs          []DataSource      `yaml:"outputs" json:"outputs"`
 	PluginDefinition string            `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
