@@ -22,14 +22,14 @@ type CloudCompute struct {
 	submissionIdMap map[string]string //maps manifest id to submitted job identifier in the compute provider
 }
 
-// Runs a WatCompute on the ComputeProvider
+// Runs a Compute on the ComputeProvider
 func (cc *CloudCompute) Run() error {
 	cc.submissionIdMap = make(map[string]string)
 	for cc.Events.HasNextEvent() {
 		event := cc.Events.NextEvent()
 		for _, manifest := range event.Manifests {
 			if len(manifest.Inputs.PayloadAttributes) > 0 || len(manifest.Inputs.DataSources) > 0 {
-				computeStore, err := NewWatStore(manifest.ManifestID)
+				computeStore, err := NewCcStore(manifest.ManifestID)
 				if err != nil {
 					return err
 				}
@@ -44,12 +44,12 @@ func (cc *CloudCompute) Run() error {
 					log.Fatalf("Unable to set payload: %s", err)
 				}
 			}
-			env := append(manifest.Inputs.Environment, KeyValuePair{WatManifestId, manifest.ManifestID})
-			env = append(env, KeyValuePair{WatEventID, event.ID.String()})
-			env = append(env, KeyValuePair{WatEventNumber, fmt.Sprint(event.EventNumber)})
-			env = append(env, KeyValuePair{WatPluginDefinition, manifest.PluginDefinition})
+			env := append(manifest.Inputs.Environment, KeyValuePair{CcManifestId, manifest.ManifestID})
+			env = append(env, KeyValuePair{CcEventID, event.ID.String()})
+			env = append(env, KeyValuePair{CcEventNumber, fmt.Sprint(event.EventNumber)})
+			env = append(env, KeyValuePair{CcPluginDefinition, manifest.PluginDefinition})
 			job := Job{
-				JobName:       fmt.Sprintf("WAT_C_%s_E_%s_M_%s", cc.ID.String(), event.ID.String(), manifest.ManifestID),
+				JobName:       fmt.Sprintf("%s_C_%s_E_%s_M_%s", CcProfile, cc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      cc.JobQueue,
 				JobDefinition: manifest.PluginDefinition,
 				DependsOn:     cc.mapDependencies(&manifest),
@@ -92,13 +92,13 @@ func (cc *CloudCompute) Log(manifestId string) ([]string, error) {
 	return nil, errors.New(fmt.Sprintf("Invalid Manifest ID: %v", manifestId))
 }
 
-// Cancels the entire wat compute includening jobs submitted to compute environment and
-// events in the WatCompute which have not been submitted to the compute provider
+// Cancels the entirecompute includening jobs submitted to compute environment and
+// events in the Compute which have not been submitted to the compute provider
 func (cc *CloudCompute) Cancel() error {
 	return errors.New("Not implemented")
 }
 
-// Maps the WAT Dependency identifiers to the compute environment identifiers received from submitted jobs.
+// Maps the Dependency identifiers to the compute environment identifiers received from submitted jobs.
 func (cc *CloudCompute) mapDependencies(manifest *Manifest) []JobDependency {
 	sdeps := make([]JobDependency, len(manifest.Dependencies))
 	for i, d := range manifest.Dependencies {
@@ -163,7 +163,7 @@ func (e *Event) AddManifestAt(m Manifest, i int) {
 ///////// PLUGIN ////////////
 
 // Plugin struct is used to interact with the compute environment and create a Job Definition
-// this is likely going to be moved to the WATAPI.
+// this is likely going to be moved to the CCAPI.
 // When entering credentials, use the format of the compute provider.
 // For example when using AWS Batch: "AWS_ACCESS_KEY_ID", "arn:aws:secretsmanager:us-east-1:01010101010:secret:mysecret:AWS_ACCESS_KEY_ID::
 type Plugin struct {

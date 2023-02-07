@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/aws"
+
+	. "github.com/usace/wat-go"
 )
 
 var awsLogGroup string = "/aws/batch/job"
@@ -129,7 +131,7 @@ func (abp *AwsBatchProvider) UnregisterPlugin(nameAndRevision string) error {
 
 func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error) {
 
-	queryString := fmt.Sprintf("WAT_C_%s*", query.QueryValue)
+	queryString := fmt.Sprintf("%s_C_%s*", CcProfile, query.QueryValue)
 
 	eventFilter := types.KeyValuesPair{
 		Name:   aws.String("JOB_NAME"),

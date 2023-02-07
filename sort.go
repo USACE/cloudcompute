@@ -24,7 +24,7 @@ func (m Manifest) Deps() []string {
 	return deps
 }
 
-//Topological Sort function for a WAT Event
+//Topological Sort function for an Event
 //returns an ordered list of manifest IDs
 func (e *Event) TopoSort() ([]string, error) {
 	digraph := depsToGraph(e.toTopoSortable())

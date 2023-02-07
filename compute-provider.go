@@ -44,8 +44,8 @@ type Job struct {
 }
 
 //JobDependency is a graph dependency relationship.
-//When created for a manifest, the JobId value should be the manifestId. When a WatCompute
-//is run, WatCompute will map manifestIds to submitted JobIds as they are submitted and
+//When created for a manifest, the JobId value should be the manifestId. When a Compute
+//is run, Compute will map manifestIds to submitted JobIds as they are submitted and
 //handle the dependency mapping for the compute environment
 type JobDependency struct {
 	JobId string //should be ManifestID when being added as a dependency in a Manifest
