@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	. "github.com/usace/wat-go"
+	. "github.com/usace/cc-go-sdk"
 
 	"github.com/google/uuid"
 )

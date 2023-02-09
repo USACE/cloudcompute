@@ -2,7 +2,7 @@ module cloudcompute
 
 go 1.18
 
-replace github.com/usace/wat-go => /Users/rdcrlrsg/Projects/programming/hec/wat-go
+replace github.com/usace/cc-go-sdk => /Users/rdcrlrsg/Projects/programming/hec/cc-go-sdk
 
 require (
 	github.com/aws/aws-sdk-go v1.44.189
@@ -10,7 +10,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.3
 	github.com/google/uuid v1.3.0
-	github.com/usace/wat-go v0.0.0-20230103143754-e7273b8fb323
 )
 
 require (
@@ -26,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.17.7 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/usace/cc-go-sdk v0.0.0-20230208195614-62426112a114 // indirect
 	github.com/usace/filestore v0.0.0-20230130152432-edce4c2aa925 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 )

@@ -47,6 +47,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
+github.com/usace/cc-go-sdk v0.0.0-20230208195614-62426112a114 h1:dtkiWa9lyMRdrDMkMgW7Zdf1PARmYmZQm0KfNwWW7XM=
+github.com/usace/cc-go-sdk v0.0.0-20230208195614-62426112a114/go.mod h1:QY9pYTAhWMAexyhzGSMziUkLyqCwFMiaUiyykrm+lHI=
 github.com/usace/filestore v0.0.0-20230130152432-edce4c2aa925 h1:UdoH/r9dPZa5/CmqtTpTwvdM9gWjgSZg6qy5JpRzGbs=
 github.com/usace/filestore v0.0.0-20230130152432-edce4c2aa925/go.mod h1:Q3fxW3tMg1HCVmThpy5EZ1dsETlTDkskQzVgBiPYI1Y=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=

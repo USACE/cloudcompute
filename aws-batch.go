@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/aws"
 
-	. "github.com/usace/wat-go"
+	. "github.com/usace/cc-go-sdk"
 )
 
 var awsLogGroup string = "/aws/batch/job"
@@ -24,7 +24,7 @@ type AwsBatchProviderInput struct {
 	ConfigProfile string
 }
 
-//AWS Batch Compute Provider implementation
+// AWS Batch Compute Provider implementation
 type AwsBatchProvider struct {
 	client        *batch.Client
 	logs          *cloudwatchlogs.Client
@@ -150,8 +150,8 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]
 	return listOutput2JobSummary(output), nil
 }
 
-//@TODO this assumes the logs are rather short.
-//Need to update for logs that require pagenation in the AWS SDK
+// @TODO this assumes the logs are rather short.
+// Need to update for logs that require pagenation in the AWS SDK
 func (abp *AwsBatchProvider) JobLog(submittedJobId string) ([]string, error) {
 	jobDesc, err := abp.describeBatchJobs([]string{submittedJobId})
 	if err != nil {
