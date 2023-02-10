@@ -7,7 +7,11 @@ A plugin is a central idea to cloudcompute. A plugin simply allows for an extern
 
 # Software Development Kit
 The software development kit (SDK) provides the essential data structures and a handful of utility services to provide the necessary consistency needed for cloudcompute.
+
 GO : https://github.com/USACE/cc-go-sdk
+
 Jave : https://github.com/USACE/cc-java-sdk
+
 Python : https://github.com/USACE/cc-python-sdk
+
 DotNet : https://github.com/USACE/cc-dotnet-sdk
