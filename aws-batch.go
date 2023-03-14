@@ -189,6 +189,7 @@ func (abp *AwsBatchProvider) describeBatchJobs(submittedJobIds []string) (*batch
 func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides {
 
 	awskvp := make([]types.KeyValuePair, len(co.Environment))
+	awsrr := make([]types.ResourceRequirement, len(co.ResourceRequirements))
 
 	for i, kvp := range co.Environment {
 		kvpl := kvp //make local copy of kvp to avoid aws pointing to a single kvp reference
@@ -198,9 +199,18 @@ func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides 
 		}
 	}
 
+	for i, rr := range co.ResourceRequirements {
+		rrl := rr
+		awsrr[i] = types.ResourceRequirement{
+			Type:  types.ResourceType(rrl.Type),
+			Value: &rrl.Value,
+		}
+	}
+
 	return &types.ContainerOverrides{
-		Command:     co.Command,
-		Environment: awskvp,
+		Command:              co.Command,
+		Environment:          awskvp,
+		ResourceRequirements: awsrr,
 	}
 }
 

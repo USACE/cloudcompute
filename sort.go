@@ -4,19 +4,19 @@ import (
 	"errors"
 )
 
-//Interface for supporting Topological sort in Manifests (or other structs that would use a toposort)
+// Interface for supporting Topological sort in Manifests (or other structs that would use a toposort)
 type TopoSortable[T comparable] interface {
 	Node() T
 	Deps() []T
 }
 
-//Manifest Node sort function for string IDs
-func (m Manifest) Node() string {
+// Manifest Node sort function for string IDs
+func (m ComputeManifest) Node() string {
 	return m.ManifestID
 }
 
-//Manifest Deps sort function for a slice of string dependencies
-func (m Manifest) Deps() []string {
+// Manifest Deps sort function for a slice of string dependencies
+func (m ComputeManifest) Deps() []string {
 	deps := []string{}
 	for _, d := range m.Dependencies {
 		deps = append(deps, d.JobId)
@@ -24,8 +24,8 @@ func (m Manifest) Deps() []string {
 	return deps
 }
 
-//Topological Sort function for an Event
-//returns an ordered list of manifest IDs
+// Topological Sort function for an Event
+// returns an ordered list of manifest IDs
 func (e *Event) TopoSort() ([]string, error) {
 	digraph := depsToGraph(e.toTopoSortable())
 	return TopologicalSort(digraph)
@@ -39,8 +39,8 @@ func (e *Event) toTopoSortable() []TopoSortable[string] {
 	return a
 }
 
-//Converts nodal dependency relationships into a dependncy graph that can be used for a topological sort.
-//works with any type that implements 'comparable'
+// Converts nodal dependency relationships into a dependncy graph that can be used for a topological sort.
+// works with any type that implements 'comparable'
 func depsToGraph[T comparable](data []TopoSortable[T]) map[T][]T {
 	digraph := make(map[T][]T)
 	for _, m := range data {
@@ -55,8 +55,8 @@ func depsToGraph[T comparable](data []TopoSortable[T]) map[T][]T {
 	return digraph
 }
 
-//Generic topological sort function.
-//supports all types that implement 'comparable'
+// Generic topological sort function.
+// supports all types that implement 'comparable'
 func TopologicalSort[T comparable](digraph map[T][]T) ([]T, error) {
 	indegrees := make(map[T]int)
 	for u := range digraph {

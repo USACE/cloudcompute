@@ -58,8 +58,9 @@ func (cc *CloudCompute) Run() error {
 				RetryAttemts:  manifest.RetryAttemts,
 				JobTimeout:    manifest.JobTimeout,
 				ContainerOverrides: ContainerOverrides{
-					Environment: env,
-					Command:     manifest.Command,
+					Environment:          env,
+					Command:              manifest.Command,
+					ResourceRequirements: manifest.ResourceRequirements,
 				},
 			}
 			err := cc.ComputeProvider.SubmitJob(&job)
@@ -99,7 +100,7 @@ func (cc *CloudCompute) Cancel() error {
 }
 
 // Maps the Dependency identifiers to the compute environment identifiers received from submitted jobs.
-func (cc *CloudCompute) mapDependencies(manifest *Manifest) []JobDependency {
+func (cc *CloudCompute) mapDependencies(manifest *ComputeManifest) []JobDependency {
 	sdeps := make([]JobDependency, len(manifest.Dependencies))
 	for i, d := range manifest.Dependencies {
 		if sdep, ok := cc.submissionIdMap[d.JobId]; ok {
@@ -112,20 +113,21 @@ func (cc *CloudCompute) mapDependencies(manifest *Manifest) []JobDependency {
 /////////////////////////////
 //////// MANIFEST ///////////
 
-// Manifest is the information necessary to execute a single job in an event
+// ComputeManifest is the information necessary to execute a single job in an event
 // @TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
-type Manifest struct {
-	ManifestName     string            `yaml:"manifest_name" json:"manifest_name"`
-	ManifestID       string            `yaml:"manifest_id,omitempty" json:"manifest_id"`
-	Command          []string          `yaml:"command" json:"command" `
-	Dependencies     []JobDependency   `yaml:"dependencies" json:"dependencies"`
-	Stores           []DataStore       `yaml:"stores" json:"stores"`
-	Inputs           PluginInputs      `yaml:"inputs" json:"inputs"`
-	Outputs          []DataSource      `yaml:"outputs" json:"outputs"`
-	PluginDefinition string            `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
-	Tags             map[string]string `yaml:"tags" json:"tags"`
-	RetryAttemts     int32             `yaml:"retry_attempts" json:"retry_attempts"`
-	JobTimeout       int32             `yaml:"job_timeout" json:"job_timeout"`
+type ComputeManifest struct {
+	ManifestName         string                `yaml:"manifest_name" json:"manifest_name"`
+	ManifestID           string                `yaml:"manifest_id,omitempty" json:"manifest_id"`
+	Command              []string              `yaml:"command" json:"command" `
+	Dependencies         []JobDependency       `yaml:"dependencies" json:"dependencies"`
+	Stores               []DataStore           `yaml:"stores" json:"stores"`
+	Inputs               PluginInputs          `yaml:"inputs" json:"inputs"`
+	Outputs              []DataSource          `yaml:"outputs" json:"outputs"`
+	PluginDefinition     string                `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
+	Tags                 map[string]string     `yaml:"tags" json:"tags"`
+	RetryAttemts         int32                 `yaml:"retry_attempts" json:"retry_attempts"`
+	JobTimeout           int32                 `yaml:"job_timeout" json:"job_timeout"`
+	ResourceRequirements []ResourceRequirement `yaml:"resource_requirements" json:"resource_requirements"`
 }
 
 //JobDefinition string            `yaml:"job_definition"`
@@ -143,18 +145,18 @@ type PluginInputs struct {
 
 // EVENT is a single run through the DAG
 type Event struct {
-	ID          uuid.UUID  `json:"id"`
-	EventNumber int64      `json:"event_number"`
-	Manifests   []Manifest `json:"manifests"`
+	ID          uuid.UUID         `json:"id"`
+	EventNumber int64             `json:"event_number"`
+	Manifests   []ComputeManifest `json:"manifests"`
 }
 
 // Adds a manifest to the Event
-func (e *Event) AddManifest(m Manifest) {
+func (e *Event) AddManifest(m ComputeManifest) {
 	e.Manifests = append(e.Manifests, m)
 }
 
 // Adds a manifest at a specific ordinal position in the event.
-func (e *Event) AddManifestAt(m Manifest, i int) {
+func (e *Event) AddManifestAt(m ComputeManifest, i int) {
 	e.Manifests = append(e.Manifests[:i+1], e.Manifests[i:]...)
 	e.Manifests[i] = m
 }
@@ -197,4 +199,7 @@ type PluginRegistrationOutput struct {
 	Name         string
 	ResourceName string
 	Revision     int32
+}
+
+type PluginManifest struct {
 }

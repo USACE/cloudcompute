@@ -1,0 +1,61 @@
+#registered sources
+#all credentials stored and injected into running containers with AWS Secret Manager
+#any source used by a plubin manifest will get credentials in the envrionment
+sources:
+  - source:
+      name: MODEL_LIBRARY_S3_STORE
+      store: FILE
+      store_type: S3
+      root: /model-library
+      env_prefix: MODEL_LIBRARY
+      credentials: arn:aws:secretsmanager:us-east-1:038611608639:secret:dev/s3/mmc-storage-6-dI6kN5
+  - source:
+      name: NSI_POSTGRES_STORE
+      store: DB
+      store_type: POSTGRES
+      env_prefix: NSI_POSTGRES 
+      credentials: arn:aws:secretsmanager:us-east-1:038611608639:secret:dev/pgsql/mmc-pg12
+
+
+
+#volumes always mount to /data
+#-----------------------
+
+
+#RAS
+plugin:
+  name: ras-7
+  description: Compute plugin to run a RAS 7 model   
+  image_and_tag: 038611608639.dkr.ecr.us-east-1.amazonaws.com/compute-plugins:ras-linux-7
+  command: ["/app/run", "Ref::param1"]
+
+#MMC Timing:
+plugin:
+  name: mmc-timing
+  description: Compute plugin to run timing on a MMC Dam Break Model
+  contact: 
+    name: Will Lehman
+    email: will@hec.net   
+  image_and_tag: 038611608639.dkr.ecr.us-east-1.amazonaws.com/compute-plugins:mmc-timing-1.1
+  command: ["/app/mmc-timing", "--cmd"]
+  environment:
+    MMC_FAIL_PLAN: 
+       - type: string,
+       - description: The HDF5 file for the RAS Model breach plan 
+		MMC_NO_FAIL_PLAN: string,
+		MMC_BREACH_TIME: fmt-string "06FEB2099 14:20:00",
+		MMC_SCENARIO: string
+		MMC_DELTA: float32,
+		MMC_S3_ROOT: string
+		RASLIBCMD: string,
+		AWS_REGION: string
+		AWS_S3_BUCKET: string,
+  data_stores:
+    - model_source:
+      description: Source for model files
+    - model_dest:
+      descroption: desintation for the computed output
+
+
+
+
