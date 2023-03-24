@@ -181,6 +181,7 @@ type Plugin struct {
 	Credentials        []KeyValuePair           `json:"credentials" yaml:"credentials"`
 	Parameters         map[string]string        `json:"parameters" yaml:"parameters"`
 	RetryAttemts       int32                    `json:"retry_attempts" yaml:"retry_attempts"`
+	ExecutionTimeout   *int32                   `json:"execution_timeout" yaml:"execution_timeout"`
 }
 
 type PluginComputeEnvironment struct {

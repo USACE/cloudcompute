@@ -85,6 +85,10 @@ func (abp *AwsBatchProvider) SubmitJob(job *Job) error {
 }
 
 func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error) {
+	var timout *types.JobTimeout
+	if plugin.ExecutionTimeout != nil {
+		timout = &types.JobTimeout{AttemptDurationSeconds: plugin.ExecutionTimeout}
+	}
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: &plugin.Name,
 		Type:              types.JobDefinitionTypeContainer,
@@ -107,6 +111,7 @@ func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationO
 			},
 			Secrets: credsToBatchSecrets(plugin.Credentials),
 		},
+		Timeout: timout,
 	}
 	output, err := abp.client.RegisterJobDefinition(ctx, input)
 	pro := PluginRegistrationOutput{}
