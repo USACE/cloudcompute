@@ -1,4 +1,4 @@
-module cloudcompute
+module github.com/usace/cloudcompute
 
 go 1.18
 
