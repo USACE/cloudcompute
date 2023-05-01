@@ -168,6 +168,9 @@ func (abp *AwsBatchProvider) JobLog(submittedJobId string) ([]string, error) {
 	}
 	logevents, err := abp.logs.GetLogEvents(ctx, &cfg)
 	out := make([]string, len(logevents.Events))
+	if logevents == nil {
+		return []string{"No logs"}, nil
+	}
 	for i, v := range logevents.Events {
 		t := time.Unix(*v.Timestamp, 0)
 		out[i] = fmt.Sprintf("%v: %s", t, *v.Message)
