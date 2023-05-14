@@ -32,8 +32,16 @@ type AwsBatchProvider struct {
 }
 
 func NewAwsBatchProvider(input AwsBatchProviderInput) (*AwsBatchProvider, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(input.BatchRegion))
+
+	options := []func(o *config.LoadOptions) error{
+		config.WithRegion(input.BatchRegion),
+	}
+	if input.ConfigProfile != "" {
+		options = append(options, config.WithSharedConfigProfile(input.ConfigProfile))
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), options...)
+
 	if err != nil {
 		log.Println("Failed to load an AWS Config")
 		return nil, err
