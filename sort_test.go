@@ -76,7 +76,7 @@ func TestTS5(t *testing.T) {
 }
 
 func TestTopoSort(t *testing.T) {
-	manifests := []Manifest{
+	manifests := []ComputeManifest{
 		{
 			ManifestID:   "1",
 			Dependencies: []JobDependency{},

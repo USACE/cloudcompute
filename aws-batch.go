@@ -32,9 +32,16 @@ type AwsBatchProvider struct {
 }
 
 func NewAwsBatchProvider(input AwsBatchProviderInput) (*AwsBatchProvider, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
+
+	options := []func(o *config.LoadOptions) error{
 		config.WithRegion(input.BatchRegion),
-		config.WithSharedConfigProfile(input.ConfigProfile))
+	}
+	if input.ConfigProfile != "" {
+		options = append(options, config.WithSharedConfigProfile(input.ConfigProfile))
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), options...)
+
 	if err != nil {
 		log.Println("Failed to load an AWS Config")
 		return nil, err
@@ -85,6 +92,10 @@ func (abp *AwsBatchProvider) SubmitJob(job *Job) error {
 }
 
 func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error) {
+	var timout *types.JobTimeout
+	if plugin.ExecutionTimeout != nil {
+		timout = &types.JobTimeout{AttemptDurationSeconds: plugin.ExecutionTimeout}
+	}
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: &plugin.Name,
 		Type:              types.JobDefinitionTypeContainer,
@@ -107,6 +118,7 @@ func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationO
 			},
 			Secrets: credsToBatchSecrets(plugin.Credentials),
 		},
+		Timeout: timout,
 	}
 	output, err := abp.client.RegisterJobDefinition(ctx, input)
 	pro := PluginRegistrationOutput{}
@@ -163,6 +175,9 @@ func (abp *AwsBatchProvider) JobLog(submittedJobId string) ([]string, error) {
 	}
 	logevents, err := abp.logs.GetLogEvents(ctx, &cfg)
 	out := make([]string, len(logevents.Events))
+	if logevents == nil {
+		return []string{"No logs"}, nil
+	}
 	for i, v := range logevents.Events {
 		t := time.Unix(*v.Timestamp, 0)
 		out[i] = fmt.Sprintf("%v: %s", t, *v.Message)
@@ -189,6 +204,7 @@ func (abp *AwsBatchProvider) describeBatchJobs(submittedJobIds []string) (*batch
 func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides {
 
 	awskvp := make([]types.KeyValuePair, len(co.Environment))
+	awsrr := make([]types.ResourceRequirement, len(co.ResourceRequirements))
 
 	for i, kvp := range co.Environment {
 		kvpl := kvp //make local copy of kvp to avoid aws pointing to a single kvp reference
@@ -198,9 +214,18 @@ func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides 
 		}
 	}
 
+	for i, rr := range co.ResourceRequirements {
+		rrl := rr
+		awsrr[i] = types.ResourceRequirement{
+			Type:  types.ResourceType(rrl.Type),
+			Value: &rrl.Value,
+		}
+	}
+
 	return &types.ContainerOverrides{
-		Command:     co.Command,
-		Environment: awskvp,
+		Command:              co.Command,
+		Environment:          awskvp,
+		ResourceRequirements: awsrr,
 	}
 }
 
