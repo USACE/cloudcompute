@@ -38,6 +38,7 @@ func (cc *CloudCompute) Run() error {
 					Stores:     manifest.Stores,
 					Inputs:     manifest.Inputs.DataSources,
 					Outputs:    manifest.Outputs,
+					Actions:    manifest.Actions,
 				}
 				err = computeStore.SetPayload(p)
 				if err != nil {
@@ -116,13 +117,14 @@ func (cc *CloudCompute) mapDependencies(manifest *ComputeManifest) []JobDependen
 // ComputeManifest is the information necessary to execute a single job in an event
 // @TODO Dependencies could be an array of string but for now is a struct so that we could add additional dependency information should the need arise.
 type ComputeManifest struct {
-	ManifestName         string                `yaml:"manifest_name" json:"manifest_name"`
-	ManifestID           string                `yaml:"manifest_id,omitempty" json:"manifest_id"`
-	Command              []string              `yaml:"command" json:"command" `
-	Dependencies         []JobDependency       `yaml:"dependencies" json:"dependencies"`
-	Stores               []DataStore           `yaml:"stores" json:"stores"`
-	Inputs               PluginInputs          `yaml:"inputs" json:"inputs"`
-	Outputs              []DataSource          `yaml:"outputs" json:"outputs"`
+	ManifestName         string          `yaml:"manifest_name" json:"manifest_name"`
+	ManifestID           string          `yaml:"manifest_id,omitempty" json:"manifest_id"`
+	Command              []string        `yaml:"command" json:"command" `
+	Dependencies         []JobDependency `yaml:"dependencies" json:"dependencies"`
+	Stores               []DataStore     `yaml:"stores" json:"stores"`
+	Inputs               PluginInputs    `yaml:"inputs" json:"inputs"`
+	Outputs              []DataSource    `yaml:"outputs" json:"outputs"`
+	Actions              []Action
 	PluginDefinition     string                `yaml:"plugin_definition" json:"plugin_definition"` //plugin resource name. "name:version"
 	Tags                 map[string]string     `yaml:"tags" json:"tags"`
 	RetryAttemts         int32                 `yaml:"retry_attempts" json:"retry_attempts"`
