@@ -150,16 +150,26 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]
 		Values: []string{queryString},
 	}
 
-	input := batch.ListJobsInput{
-		JobQueue: &jobQueue,
-		Filters:  []types.KeyValuesPair{eventFilter},
-	}
+	var nextToken *string
+	allJobSummaries := []JobSummary{}
+	for {
+		input := batch.ListJobsInput{
+			JobQueue:  &jobQueue,
+			Filters:   []types.KeyValuesPair{eventFilter},
+			NextToken: nextToken,
+		}
 
-	output, err := abp.client.ListJobs(ctx, &input)
-	if err != nil {
-		return nil, err
+		output, err := abp.client.ListJobs(ctx, &input)
+		if err != nil {
+			return nil, err
+		}
+		allJobSummaries = append(allJobSummaries, listOutput2JobSummary(output)...)
+		nextToken = output.NextToken
+		if nextToken == nil {
+			break
+		}
 	}
-	return listOutput2JobSummary(output), nil
+	return allJobSummaries, nil
 }
 
 // @TODO this assumes the logs are rather short.
