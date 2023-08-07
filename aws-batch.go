@@ -242,9 +242,9 @@ func toBatchContainerOverrides(co ContainerOverrides) *types.ContainerOverrides 
 func toBatchDependency(jobDependency []JobDependency) []types.JobDependency {
 	batchDeps := make([]types.JobDependency, len(jobDependency))
 	for i, d := range jobDependency {
+		depCopy := d
 		batchDeps[i] = types.JobDependency{
-			JobId: &d.JobId,
-			Type:  types.ArrayJobDependencySequential,
+			JobId: &depCopy.JobId,
 		}
 	}
 	return batchDeps
