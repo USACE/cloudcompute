@@ -88,3 +88,14 @@ type KeyValuePair struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
+
+type KeyValuePairs []KeyValuePair
+
+func (kvps KeyValuePairs) HasKey(key string) bool {
+	for _, kvp := range kvps {
+		if kvp.Name == key {
+			return true
+		}
+	}
+	return false
+}

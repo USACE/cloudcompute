@@ -47,7 +47,9 @@ func (cc *CloudCompute) Run() error {
 			}
 			env := append(manifest.Inputs.Environment, KeyValuePair{CcManifestId, manifest.ManifestID})
 			env = append(env, KeyValuePair{CcEventID, event.ID.String()})
-			env = append(env, KeyValuePair{CcEventNumber, fmt.Sprint(event.EventNumber)})
+			if !env.HasKey(CcEventNumber) {
+				env = append(env, KeyValuePair{CcEventNumber, fmt.Sprint(event.EventNumber)})
+			}
 			env = append(env, KeyValuePair{CcPluginDefinition, manifest.PluginDefinition})
 			job := Job{
 				JobName:       fmt.Sprintf("%s_C_%s_E_%s_M_%s", CcProfile, cc.ID.String(), event.ID.String(), manifest.ManifestID),
@@ -136,10 +138,10 @@ type ComputeManifest struct {
 
 // Job level inputs that can be injected into a container
 type PluginInputs struct {
-	Environment       []KeyValuePair         `json:"environment"`
-	Parameters        map[string]string      `json:"parameters"`
-	DataSources       []DataSource           `json:"dataSources"`
-	PayloadAttributes map[string]interface{} `json:"payloadAttributes"`
+	Environment       KeyValuePairs     `json:"environment"`
+	Parameters        map[string]string `json:"parameters"`
+	DataSources       []DataSource      `json:"dataSources"`
+	PayloadAttributes PayloadAttributes `json:"payloadAttributes"`
 }
 
 /////////////////////////////
