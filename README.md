@@ -10,7 +10,7 @@ The software development kit (SDK) provides the essential data structures and a 
 
 GO : https://github.com/USACE/cc-go-sdk
 
-Jave : https://github.com/USACE/cc-java-sdk
+Java : https://github.com/USACE/cc-java-sdk
 
 Python : https://github.com/USACE/cc-python-sdk
 
