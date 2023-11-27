@@ -110,8 +110,16 @@ func (cc *CloudCompute) Log(manifestId string) ([]string, error) {
 
 // Cancels the entirecompute includening jobs submitted to compute environment and
 // events in the Compute which have not been submitted to the compute provider
-func (cc *CloudCompute) Cancel() error {
-	return errors.New("Not implemented")
+func (cc *CloudCompute) Cancel(reason string) error {
+	input := TermminateJobInput{
+		Reason:   reason,
+		JobQueue: cc.JobQueue,
+		Query: JobsSummaryQuery{
+			QueryLevel: SUMMARY_COMPUTE,
+			QueryValue: cc.ID.String(),
+		},
+	}
+	return cc.ComputeProvider.TerminateJobs(input)
 }
 
 // Maps the Dependency identifiers to the compute environment identifiers received from submitted jobs.

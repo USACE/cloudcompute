@@ -27,6 +27,8 @@ type TermminateJobInput struct {
 	JobQueue string
 
 	//Optional. A jobs summary query that will generate a list of jobs to terminate
+	//if this value is provided the JobSummaryQuery JobSummaryFunction is ignored
+	//and should be left empty
 	Query JobsSummaryQuery
 
 	//Optional. A list of VendorJobs to terminate
