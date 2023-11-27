@@ -241,6 +241,9 @@ func (abp *AwsBatchProvider) JobLog(submittedJobId string) ([]string, error) {
 		LogStreamName: jobDesc.Jobs[0].Container.LogStreamName,
 	}
 	logevents, err := abp.logs.GetLogEvents(ctx, &cfg)
+	if err != nil {
+		return nil, err
+	}
 	out := make([]string, len(logevents.Events))
 	if logevents == nil {
 		return []string{"No logs"}, nil
