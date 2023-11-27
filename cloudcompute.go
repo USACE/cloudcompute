@@ -14,12 +14,23 @@ import (
 // The compute environment Job Queue and Job Definitions must exist before a CloudCompute
 // can be initiated.
 type CloudCompute struct {
-	ID              uuid.UUID         `json:"id"`
-	Name            string            `json:"name"`
-	JobQueue        string            `json:"jobQueue"`
-	Events          EventGenerator    `json:"events"`
-	ComputeProvider ComputeProvider   `json:"computeProvider"`
-	submissionIdMap map[string]string //maps manifest id to submitted job identifier in the compute provider
+	//Compute Identifier
+	ID uuid.UUID `json:"id"`
+
+	//User friendly Name for the compute
+	Name string `json:"name"`
+
+	//JobQueue to push the events to
+	JobQueue string `json:"jobQueue"`
+
+	//Event generator
+	Events EventGenerator `json:"events"`
+
+	//compute provider for the compute (typically AwsBatchProvider)
+	ComputeProvider ComputeProvider `json:"computeProvider"`
+
+	//map of cloud compute job identifier (manifest id) to submitted job identifier (VendorID) in the compute provider
+	submissionIdMap map[string]string
 }
 
 // Runs a Compute on the ComputeProvider

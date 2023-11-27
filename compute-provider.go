@@ -9,10 +9,52 @@ const (
 	ResourceTypeVcpu            ResourceType = "VCPU"
 	ResourceTypeMemory          ResourceType = "MEMORY"
 	ResourceTypeAttachedStorage ResourceType = "ATTACHEDSTORAGE"
+
+	SUMMARY_COMPUTE  string = "COMPUTE"
+	SUMMARY_EVENT    string = "EVENT"
+	SUMMARY_MANIFEST string = "MANIFEST"
 )
 
+// Input for terminating jobs submitted to a queue.
+// the list of jobs to terminate is determined by either
+// a StatusQuery with each job in the status query being terminated
+// or a list of VendorJobs for termination.
+type TermminateJobInput struct {
+	//Users reason for terminating the job
+	Reason string
+
+	//The Vendor Job Queue the job was submitted to
+	JobQueue string
+
+	//Optional. A jobs summary query that will generate a list of jobs to terminate
+	Query JobsSummaryQuery
+
+	//Optional. A list of VendorJobs to terminate
+	VendorJobs []VendorJob
+
+	//Optional.  A function to process the results of each terminated job
+	TerminateJobFunction TerminateJobFunction
+}
+
+type TerminateJobOutput struct {
+
+	//CloudCompute Job Name
+	JobName string
+
+	//Error if returned from the terminate operation
+	Err error
+
+	//Vendor Job ID
+	JobId string
+}
+
+// function to process the results of each job termination
+type TerminateJobFunction func(output TerminateJobOutput)
+
+// Interface for a compute provider.  Curretnly there is a single implementation for AwsBatch
 type ComputeProvider interface {
 	SubmitJob(job *Job) error
+	TerminateJobs(input TermminateJobInput) error
 	Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error)
 	JobLog(submittedJobId string) ([]string, error)
 	RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error)
@@ -45,8 +87,8 @@ type Job struct {
 	Parameters         map[string]string
 	Tags               map[string]string
 	RetryAttemts       int32
-	JobTimeout         int32 //duration in seconds
-	SubmittedJob       *SubmitJobResult
+	JobTimeout         int32            //duration in seconds
+	SubmittedJob       *SubmitJobResult //reference to the job information from the compute environment
 }
 
 // JobDependency is a graph dependency relationship.
@@ -54,34 +96,76 @@ type Job struct {
 // is run, Compute will map manifestIds to submitted JobIds as they are submitted and
 // handle the dependency mapping for the compute environment
 type JobDependency struct {
-	JobId string //should be ManifestID when being added as a dependency in a Manifest
+	//Cloud Compute Job Identifier
+	//should be ManifestID when being added as a dependency in a Manifest
+	JobId string
+}
+
+type VendorJob interface {
+	ID() string
+	Name() string
 }
 
 type SubmitJobResult struct {
-	JobId        *string
+
+	//Vendor ID
+	JobId *string
+
+	//Vendor Resource Name
 	ResourceName *string //ARN in AWS
 }
 
+// function to process the results of a JobSummary request
+// summaries are processed in batches of JobSummaries
+// but will continue until all jobs are reported.  In AWS
+// this processes the slice of summaries for the initial
+// request and all subsequenct continutation tokens
+type JobSummaryFunction func(summaries []JobSummary, err error)
+
 type JobSummary struct {
-	JobId        string
-	JobName      string
-	CreatedAt    *int64
-	StartedAt    *int64
-	Status       string
+	//identifier for the compute environment being used.  e.g. AWS Batch Job ID
+	JobId string
+
+	//cloud compute job name
+	JobName string
+
+	//unix timestamp in milliseconds for when the job was created
+	CreatedAt *int64
+
+	//unix timestamp in milliseconds for when the job was started
+	StartedAt *int64
+
+	//status string value
+	Status string
+
+	//human readable string of the status
 	StatusDetail *string
-	StoppedAt    *int64
+
+	//unix timestamp in milliseconds for when the job was stopped
+	StoppedAt *int64
+
+	//Compute Vendor resource name for the job.  e.g. the Job ARN for AWS
 	ResourceName string
 }
 
-const (
-	SUMMARY_COMPUTE  string = "COMPUTE"
-	SUMMARY_EVENT           = "EVENT"
-	SUMMARY_MANIFEST        = "MANIFEST"
-)
+func (js JobSummary) ID() string {
+	return js.JobId
+}
+
+func (js JobSummary) Name() string {
+	return js.JobName
+}
 
 type JobsSummaryQuery struct {
-	QueryLevel string //COMPUTE/EVENT/MANIFEST
+	//The Level to request.  Must be one of three values
+	//COMPUTE/EVENT/MANIFEST as represented by the SUMMARY_{level} constants
+	QueryLevel string
+
+	//the GUID representing the referenced level
 	QueryValue string
+
+	//a required function to process each job returned in the query
+	JobSummaryFunction JobSummaryFunction
 }
 
 type KeyValuePair struct {

@@ -2,15 +2,16 @@ package cloudcompute
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go/aws"
 
 	. "github.com/usace/cc-go-sdk"
 )
@@ -18,10 +19,20 @@ import (
 var awsLogGroup string = "/aws/batch/job"
 var ctx context.Context = context.Background()
 
+//options are any set of valid AWS Batch config options.
+//for example, to set max retries to unlimited:
+/*
+	input.Options=[]func(o *config.LoadOptions) error{
+		config.WithRetryer(func() aws.Retryer {
+			return retry.AddWithMaxAttempts(retry.NewStandard(), 0)
+		}))
+	}
+*/
 type AwsBatchProviderInput struct {
 	ExecutionRole string
 	BatchRegion   string
 	ConfigProfile string
+	Options       []func(o *config.LoadOptions) error
 }
 
 // AWS Batch Compute Provider implementation
@@ -36,10 +47,14 @@ func NewAwsBatchProvider(input AwsBatchProviderInput) (*AwsBatchProvider, error)
 	options := []func(o *config.LoadOptions) error{
 		config.WithRegion(input.BatchRegion),
 	}
+
 	if input.ConfigProfile != "" {
 		options = append(options, config.WithSharedConfigProfile(input.ConfigProfile))
 	}
 
+	if len(input.Options) > 0 {
+		options = append(options, input.Options...)
+	}
 	cfg, err := config.LoadDefaultConfig(context.TODO(), options...)
 
 	if err != nil {
@@ -141,7 +156,52 @@ func (abp *AwsBatchProvider) UnregisterPlugin(nameAndRevision string) error {
 	return err
 }
 
-func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error) {
+// Terminates jobs submitted to AWS Batch job queues
+func (abp *AwsBatchProvider) TerminateJobs(input TermminateJobInput) error {
+	jobs := input.VendorJobs
+	if jobs == nil {
+		input.Query.JobSummaryFunction = func(summaries []JobSummary, err error) {
+			for _, job := range summaries {
+				output := abp.terminateJob(job.JobName, job.JobId, input.Reason)
+				if input.TerminateJobFunction != nil {
+					input.TerminateJobFunction(output)
+				}
+			}
+		}
+		statuserr := abp.Status(input.JobQueue, input.Query)
+		if statuserr != nil {
+			return statuserr
+		}
+	} else {
+		for _, job := range jobs {
+			output := abp.terminateJob(job.Name(), job.ID(), input.Reason)
+			if input.TerminateJobFunction != nil {
+				input.TerminateJobFunction(output)
+			}
+		}
+		return nil
+	}
+	return nil
+}
+
+func (abp *AwsBatchProvider) terminateJob(name string, id string, reason string) TerminateJobOutput {
+	tji := batch.TerminateJobInput{
+		JobId:  &id,
+		Reason: &reason,
+	}
+	_, err := abp.client.TerminateJob(context.TODO(), &tji)
+
+	return TerminateJobOutput{
+		JobName: name,
+		JobId:   id,
+		Err:     err,
+	}
+}
+
+func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) error {
+	if query.JobSummaryFunction == nil {
+		return errors.New("Missing JubSummaryFunction.  You have no way to process the result.")
+	}
 
 	queryString := fmt.Sprintf("%s_C_%s*", CcProfile, query.QueryValue)
 
@@ -151,7 +211,7 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]
 	}
 
 	var nextToken *string
-	allJobSummaries := []JobSummary{}
+
 	for {
 		input := batch.ListJobsInput{
 			JobQueue:  &jobQueue,
@@ -160,16 +220,13 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) ([]
 		}
 
 		output, err := abp.client.ListJobs(ctx, &input)
-		if err != nil {
-			return nil, err
-		}
-		allJobSummaries = append(allJobSummaries, listOutput2JobSummary(output)...)
+		query.JobSummaryFunction(listOutput2JobSummary(output), err)
 		nextToken = output.NextToken
 		if nextToken == nil {
 			break
 		}
 	}
-	return allJobSummaries, nil
+	return nil
 }
 
 // @TODO this assumes the logs are rather short.
