@@ -55,7 +55,7 @@ type TerminateJobFunction func(output TerminateJobOutput)
 type ComputeProvider interface {
 	SubmitJob(job *Job) error
 	TerminateJobs(input TermminateJobInput) error
-	Status(jobQueue string, query JobsSummaryQuery) ([]JobSummary, error)
+	Status(jobQueue string, query JobsSummaryQuery) error
 	JobLog(submittedJobId string) ([]string, error)
 	RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error)
 	UnregisterPlugin(nameAndRevision string) error

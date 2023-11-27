@@ -95,7 +95,8 @@ Note: if a manifest submission in an event fails, then what should plan be:
 */
 
 // Requests the status of a given compute at the COMPUTE, EVENT, or JOB level
-func (cc *CloudCompute) Status(query JobsSummaryQuery) ([]JobSummary, error) {
+// A JobSummaryFunction is necessary to process the status
+func (cc *CloudCompute) Status(query JobsSummaryQuery) error {
 	return cc.ComputeProvider.Status(cc.JobQueue, query)
 }
 
