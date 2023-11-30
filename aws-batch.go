@@ -184,6 +184,25 @@ func (abp *AwsBatchProvider) TerminateJobs(input TermminateJobInput) error {
 	return nil
 }
 
+// Terminates everything running in a queue
+func (abp *AwsBatchProvider) TerminateQueue(input TermminateJobInput) error {
+
+	input.Query.JobSummaryFunction = func(summaries []JobSummary, err error) {
+		for _, job := range summaries {
+			output := abp.terminateJob(job.JobName, job.JobId, input.Reason)
+			if input.TerminateJobFunction != nil {
+				input.TerminateJobFunction(output)
+			}
+		}
+	}
+	statuserr := abp.QueueSummary(input.JobQueue, input.Query)
+	if statuserr != nil {
+		return statuserr
+	}
+
+	return nil
+}
+
 func (abp *AwsBatchProvider) terminateJob(name string, id string, reason string) TerminateJobOutput {
 	tji := batch.TerminateJobInput{
 		JobId:  &id,
@@ -198,12 +217,53 @@ func (abp *AwsBatchProvider) terminateJob(name string, id string, reason string)
 	}
 }
 
+func (abp *AwsBatchProvider) QueueSummary(jobQueue string, query JobsSummaryQuery) error {
+	if query.JobSummaryFunction == nil {
+		return errors.New("Missing JubSummaryFunction.  You have no way to process the result.")
+	}
+
+	var nextToken *string
+
+	statusList := []types.JobStatus{
+		types.JobStatusSubmitted,
+		types.JobStatusPending,
+		types.JobStatusRunnable,
+		types.JobStatusStarting,
+		types.JobStatusRunning,
+	}
+	for _, status := range statusList {
+		for {
+			input := batch.ListJobsInput{
+				JobQueue:  &jobQueue,
+				JobStatus: status,
+				NextToken: nextToken,
+			}
+
+			output, err := abp.client.ListJobs(ctx, &input)
+			query.JobSummaryFunction(listOutput2JobSummary(output), err)
+			nextToken = output.NextToken
+			if nextToken == nil {
+				break
+			}
+		}
+	}
+	return nil
+}
+
 func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) error {
 	if query.JobSummaryFunction == nil {
 		return errors.New("Missing JubSummaryFunction.  You have no way to process the result.")
 	}
 
-	queryString := fmt.Sprintf("%s_C_%s*", CcProfile, query.QueryValue)
+	var queryString string
+	switch query.QueryLevel {
+	case SUMMARY_COMPUTE:
+		queryString = fmt.Sprintf("%s_C_%s*", CcProfile, query.QueryValue.Compute)
+	case SUMMARY_EVENT:
+		queryString = fmt.Sprintf("%s_C_%s_E_%s*", CcProfile, query.QueryValue.Compute, query.QueryValue.Event)
+	case SUMMARY_MANIFEST:
+		queryString = fmt.Sprintf("%s_C_%s_E_%s_M_%s", CcProfile, query.QueryValue, query.QueryValue.Compute, query.QueryValue.Event)
+	}
 
 	eventFilter := types.KeyValuesPair{
 		Name:   aws.String("JOB_NAME"),
@@ -220,6 +280,9 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) err
 		}
 
 		output, err := abp.client.ListJobs(ctx, &input)
+		if err != nil {
+			return err
+		}
 		query.JobSummaryFunction(listOutput2JobSummary(output), err)
 		nextToken = output.NextToken
 		if nextToken == nil {

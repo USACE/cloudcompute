@@ -1,6 +1,11 @@
 package cloudcompute
 
-import "github.com/google/uuid"
+import (
+	"errors"
+	"regexp"
+
+	"github.com/google/uuid"
+)
 
 type ResourceType string
 
@@ -163,11 +168,31 @@ type JobsSummaryQuery struct {
 	//COMPUTE/EVENT/MANIFEST as represented by the SUMMARY_{level} constants
 	QueryLevel string
 
-	//the GUID representing the referenced level
-	QueryValue string
+	//the GUIDs representing the referenced levels
+	//The value must include preceding levels, so COMPUTE level must have at least the compute GUID
+	//EVENT level must have the compuyte and event levels and MANIFEST level has all three guids
+	QueryValue JobNameParts
 
 	//a required function to process each job returned in the query
 	JobSummaryFunction JobSummaryFunction
+}
+
+type JobNameParts struct {
+	Compute  string
+	Event    string
+	Manifest string
+}
+
+func (jnp *JobNameParts) Parse(jobname string) error {
+	re := regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
+	guids := re.FindAllString(jobname, -1)
+	if len(guids) != 3 {
+		return errors.New("Invalid Job Name")
+	}
+	jnp.Compute = guids[0]
+	jnp.Event = guids[1]
+	jnp.Manifest = guids[2]
+	return nil
 }
 
 type KeyValuePair struct {

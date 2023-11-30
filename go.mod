@@ -33,5 +33,5 @@ require (
 	github.com/aws/smithy-go v1.14.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/usace/filesapi v0.0.0-20231123170634-24f2bdf5f03f // indirect
+	github.com/usace/filesapi v0.0.0-20231128172142-1fae630d4284 // indirect
 )

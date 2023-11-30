@@ -108,15 +108,14 @@ func (cc *CloudCompute) Log(manifestId string) ([]string, error) {
 	return nil, errors.New(fmt.Sprintf("Invalid Manifest ID: %v", manifestId))
 }
 
-// Cancels the entirecompute includening jobs submitted to compute environment and
-// events in the Compute which have not been submitted to the compute provider
+// Cancels jobs submitted to compute environment
 func (cc *CloudCompute) Cancel(reason string) error {
 	input := TermminateJobInput{
 		Reason:   reason,
 		JobQueue: cc.JobQueue,
 		Query: JobsSummaryQuery{
 			QueryLevel: SUMMARY_COMPUTE,
-			QueryValue: cc.ID.String(),
+			QueryValue: JobNameParts{Compute: cc.ID.String()},
 		},
 	}
 	return cc.ComputeProvider.TerminateJobs(input)
