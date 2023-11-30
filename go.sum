@@ -63,6 +63,8 @@ github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZV
 github.com/spf13/cast v1.5.1 h1:R+kOtfhWQE6TVQzY+4D7wJLBgkdVasCEFxSUBYBYIlA=
 github.com/spf13/cast v1.5.1/go.mod h1:b9PdjNptOpzXr7Rq1q9gJML/2cdGQAo69NKzQ10KN48=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/usace/cc-go-sdk v0.0.0-20231129152747-8fbc4ad6c0ed h1:qtqfqOeLPBdvKQY9uQjxKc/GuwQK+e/E2Kku7EVQt2s=
+github.com/usace/cc-go-sdk v0.0.0-20231129152747-8fbc4ad6c0ed/go.mod h1:Dih8yEXVjwtWeJxqlR69OTdEUbpev4gugIF73MWYJKM=
 github.com/usace/filesapi v0.0.0-20231128172142-1fae630d4284 h1:TIBa6jW3sNTJDJfs0uek8IXH13+o0bLmeTT4ROUeHkg=
 github.com/usace/filesapi v0.0.0-20231128172142-1fae630d4284/go.mod h1:0iUeDc/BkkbMPNykeZuC4pfU46IMzQTRh7c07f3Q1p0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

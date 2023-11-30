@@ -2,7 +2,7 @@ module github.com/usace/cloudcompute
 
 go 1.18
 
-replace github.com/usace/cc-go-sdk => /Users/rdcrlrsg/Projects/programming/hec/cc-go-sdk
+//replace github.com/usace/cc-go-sdk => /Users/rdcrlrsg/Projects/programming/hec/cc-go-sdk
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.0
@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.3
 	github.com/google/uuid v1.3.0
-	github.com/usace/cc-go-sdk v0.0.0-20231124160113-166573c281e4
+	github.com/usace/cc-go-sdk v0.0.0-20231129152747-8fbc4ad6c0ed
 )
 
 require (
