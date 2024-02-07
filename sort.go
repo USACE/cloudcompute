@@ -28,6 +28,9 @@ func (m ComputeManifest) Deps() []string {
 // returns an ordered list of manifest IDs
 func (e *Event) TopoSort() ([]string, error) {
 	digraph := depsToGraph(e.toTopoSortable())
+	if len(digraph) == 0 {
+		return nil, errors.New("No dependencies beween manifests provided")
+	}
 	return TopologicalSort(digraph)
 }
 
