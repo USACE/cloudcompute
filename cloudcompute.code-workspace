@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../cc-go-sdk"
+		},
+		{
+			"path": "../../go/src/github.com/usace/filesapi"
+		}
+	],
+	"settings": {}
+}

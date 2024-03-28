@@ -77,7 +77,7 @@ type ContainerOverrides struct {
 }
 
 type ResourceRequirement struct {
-	Type  string
+	Type  ResourceType
 	Value string
 }
 
@@ -127,7 +127,7 @@ type SubmitJobResult struct {
 // but will continue until all jobs are reported.  In AWS
 // this processes the slice of summaries for the initial
 // request and all subsequenct continutation tokens
-type JobSummaryFunction func(summaries []JobSummary, err error)
+type JobSummaryFunction func(summaries []JobSummary)
 
 type JobSummary struct {
 	//identifier for the compute environment being used.  e.g. AWS Batch Job ID
