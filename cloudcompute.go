@@ -205,6 +205,8 @@ type Plugin struct {
 	Parameters         map[string]string        `json:"parameters" yaml:"parameters"`
 	RetryAttemts       int32                    `json:"retry_attempts" yaml:"retry_attempts"`
 	ExecutionTimeout   *int32                   `json:"execution_timeout" yaml:"execution_timeout"`
+	Priviledged        bool                     `json:"priviledged" yaml:"priviledged"`
+	LinuxParameters    *PluginLinuxParameters   `json:"linux_parameters" yaml:"linux_parameters"`
 }
 
 type PluginComputeEnvironment struct {
@@ -223,6 +225,15 @@ type PluginRegistrationOutput struct {
 	Name         string
 	ResourceName string
 	Revision     int32
+}
+
+type PluginLinuxParameters struct {
+	Devices []LinuxDevice `json:"devices" yaml:"devices"`
+}
+
+type LinuxDevice struct {
+	HostPath      string `json:"host_path" yaml:"host_path"`
+	ContainerPath string `json:"container_path" yaml:"container_path"`
 }
 
 type PluginManifest struct {

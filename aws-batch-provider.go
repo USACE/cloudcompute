@@ -106,6 +106,13 @@ func (abp *AwsBatchProvider) SubmitJob(job *Job) error {
 
 func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationOutput, error) {
 	var timout *types.JobTimeout
+
+	/////////////
+	//var isPriviledged bool = false
+	//var hostPath string = "/dev/fuse"
+
+	//////////////
+
 	if plugin.ExecutionTimeout != nil {
 		timout = &types.JobTimeout{AttemptDurationSeconds: plugin.ExecutionTimeout}
 	}
@@ -129,8 +136,11 @@ func (abp *AwsBatchProvider) RegisterPlugin(plugin *Plugin) (PluginRegistrationO
 					Value: &plugin.ComputeEnvironment.VCPU,
 				},
 			},
-			Secrets: credsToBatchSecrets(plugin.Credentials),
+			Secrets:         credsToBatchSecrets(plugin.Credentials),
+			Privileged:      &plugin.Priviledged,
+			LinuxParameters: LinuxParamsToBatchParams(plugin.LinuxParameters),
 		},
+
 		Timeout: timout,
 	}
 	output, err := abp.client.RegisterJobDefinition(ctx, input)
@@ -430,6 +440,27 @@ func paramsMapToKvp(params map[string]string) []types.KeyValuePair {
 		i++
 	}
 	return pout
+}
+
+func LinuxParamsToBatchParams(ccLinuxParams *PluginLinuxParameters) *types.LinuxParameters {
+	if ccLinuxParams == nil {
+		return nil
+	}
+	var batchDevices []types.Device
+	if len(ccLinuxParams.Devices) > 0 {
+		batchDevices = make([]types.Device, len(ccLinuxParams.Devices))
+		for i, v := range ccLinuxParams.Devices {
+			device := v
+			batchDevices[i] = types.Device{
+				HostPath:      &device.HostPath,
+				ContainerPath: &device.ContainerPath,
+			}
+		}
+	}
+	batchParams := types.LinuxParameters{
+		Devices: batchDevices,
+	}
+	return &batchParams
 }
 
 /*
