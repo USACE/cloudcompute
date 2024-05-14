@@ -3,7 +3,6 @@ package cloudcompute
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	. "github.com/usace/cc-go-sdk"
 
@@ -33,35 +32,49 @@ type CloudCompute struct {
 	submissionIdMap map[string]string
 }
 
+/*
+	Changes
+	 - added a payload identifier uuid.  CC store switch to that UUID rather than manifest UUID
+	 - Payload identifier gets added to compute job as a tag so we can always look up the payload from a job in a compute env
+	 - Responsibility to write the payload is shifted to the computemanifest
+	 - rules for writing are:
+	   - if there are no attributes or datasources then the compute RUN method will skip writing a manifest.  Probably should add actions here or just skip this check
+	   - else, call manifest.WritePayload
+	   - manifest.writepayload will:
+	     - check to see if a payload was previously written (i.e. does the manifest have a payload id?)
+		   - if so: return
+		   - if not, write a new payload
+*/
+
 // Runs a Compute on the ComputeProvider
 func (cc *CloudCompute) Run() error {
 	cc.submissionIdMap = make(map[string]string)
 	for cc.Events.HasNextEvent() {
 		event := cc.Events.NextEvent()
+
+		//go func(event Event) {
 		for _, manifest := range event.Manifests {
 			if len(manifest.Inputs.PayloadAttributes) > 0 || len(manifest.Inputs.DataSources) > 0 {
-				computeStore, err := NewCcStore(manifest.ManifestID)
+				err := manifest.WritePayload() //guarantees the payload id written to the manifest
 				if err != nil {
 					return err
 				}
-				p := Payload{
-					Attributes: manifest.Inputs.PayloadAttributes,
-					Stores:     manifest.Stores,
-					Inputs:     manifest.Inputs.DataSources,
-					Outputs:    manifest.Outputs,
-					Actions:    manifest.Actions,
-				}
-				err = computeStore.SetPayload(p)
-				if err != nil {
-					log.Fatalf("Unable to set payload: %s", err)
-				}
 			}
-			env := append(manifest.Inputs.Environment, KeyValuePair{CcManifestId, manifest.ManifestID})
-			env = append(env, KeyValuePair{CcEventID, event.ID.String()})
+			env := append(manifest.Inputs.Environment,
+				KeyValuePair{CcPayloadId, manifest.payloadID.String()},
+				KeyValuePair{CcEventID, event.ID.String()})
+
 			if !env.HasKey(CcEventNumber) {
 				env = append(env, KeyValuePair{CcEventNumber, fmt.Sprint(event.EventNumber)})
 			}
-			env = append(env, KeyValuePair{CcPluginDefinition, manifest.PluginDefinition})
+
+			//the manifest substitution is will be removed in future versions.
+			//it is only supported now to ease the transition to payloadId vs manifestId
+			if !env.HasKey(CcManifestId) {
+				env = append(env, KeyValuePair{CcManifestId, manifest.ManifestID})
+			}
+
+			env = append(env, KeyValuePair{CcPluginDefinition, manifest.PluginDefinition}) //@TODO do we need this?
 			job := Job{
 				JobName:       fmt.Sprintf("%s_C_%s_E_%s_M_%s", CcProfile, cc.ID.String(), event.ID.String(), manifest.ManifestID),
 				JobQueue:      cc.JobQueue,
@@ -83,6 +96,7 @@ func (cc *CloudCompute) Run() error {
 			}
 			cc.submissionIdMap[manifest.ManifestID] = *job.SubmittedJob.JobId
 		}
+		//}(event)
 	}
 	return nil
 }
@@ -151,6 +165,42 @@ type ComputeManifest struct {
 	RetryAttemts         int32                 `yaml:"retry_attempts" json:"retry_attempts"`
 	JobTimeout           int32                 `yaml:"job_timeout" json:"job_timeout"`
 	ResourceRequirements []ResourceRequirement `yaml:"resource_requirements" json:"resource_requirements"`
+	payloadID            uuid.UUID             `yaml:"-" json:"-"`
+}
+
+// This is a transitional method that will be removed in a future version
+// It is intended to facilitate running manifests written prior to
+// payloadId
+// @Depricated
+func (cm *ComputeManifest) GetPayload() uuid.UUID {
+	return cm.payloadID
+}
+
+func (cm *ComputeManifest) WritePayload() error {
+	if cm.payloadID == uuid.Nil {
+		payloadId := uuid.New()
+		computeStore, err := NewCcStore(payloadId.String())
+		if err != nil {
+			return err
+		}
+		p := Payload{
+			Attributes: cm.Inputs.PayloadAttributes,
+			Stores:     cm.Stores,
+			Inputs:     cm.Inputs.DataSources,
+			Outputs:    cm.Outputs,
+			Actions:    cm.Actions,
+		}
+		err = computeStore.SetPayload(p)
+		if err != nil {
+			return err
+		}
+		if cm.Tags == nil {
+			cm.Tags = make(map[string]string)
+		}
+		cm.Tags["payload"] = payloadId.String()
+		cm.payloadID = payloadId
+	}
+	return nil
 }
 
 //JobDefinition string            `yaml:"job_definition"`

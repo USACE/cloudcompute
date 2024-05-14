@@ -127,7 +127,7 @@ type SubmitJobResult struct {
 // but will continue until all jobs are reported.  In AWS
 // this processes the slice of summaries for the initial
 // request and all subsequenct continutation tokens
-type JobSummaryFunction func(summaries []JobSummary, err error)
+type JobSummaryFunction func(summaries []JobSummary)
 
 type JobSummary struct {
 	//identifier for the compute environment being used.  e.g. AWS Batch Job ID
@@ -209,4 +209,29 @@ func (kvps KeyValuePairs) HasKey(key string) bool {
 		}
 	}
 	return false
+}
+
+// designed to behave like a system env.  Value returned if key is found
+// empty string returned otherwise
+func (kvps KeyValuePairs) GetVal(key string) string {
+	for _, kvp := range kvps {
+		if kvp.Name == key {
+			return kvp.Value
+		}
+	}
+	return ""
+}
+
+func (kvps KeyValuePairs) SetVal(key string, val string) KeyValuePairs {
+	for i, kvp := range kvps {
+		if kvp.Name == key {
+			kvps[i].Value = val
+		}
+	}
+	//doesn't exist, add a new value
+	kvps = append(kvps, KeyValuePair{
+		Name:  key,
+		Value: val,
+	})
+	return kvps
 }

@@ -160,7 +160,7 @@ func (abp *AwsBatchProvider) UnregisterPlugin(nameAndRevision string) error {
 func (abp *AwsBatchProvider) TerminateJobs(input TermminateJobInput) error {
 	jobs := input.VendorJobs
 	if jobs == nil {
-		input.Query.JobSummaryFunction = func(summaries []JobSummary, err error) {
+		input.Query.JobSummaryFunction = func(summaries []JobSummary) {
 			for _, job := range summaries {
 				output := abp.terminateJob(job.JobName, job.JobId, input.Reason)
 				if input.TerminateJobFunction != nil {
@@ -187,7 +187,7 @@ func (abp *AwsBatchProvider) TerminateJobs(input TermminateJobInput) error {
 // Terminates everything running in a queue
 func (abp *AwsBatchProvider) TerminateQueue(input TermminateJobInput) error {
 
-	input.Query.JobSummaryFunction = func(summaries []JobSummary, err error) {
+	input.Query.JobSummaryFunction = func(summaries []JobSummary) {
 		for _, job := range summaries {
 			output := abp.terminateJob(job.JobName, job.JobId, input.Reason)
 			if input.TerminateJobFunction != nil {
@@ -240,7 +240,10 @@ func (abp *AwsBatchProvider) QueueSummary(jobQueue string, query JobsSummaryQuer
 			}
 
 			output, err := abp.client.ListJobs(ctx, &input)
-			query.JobSummaryFunction(listOutput2JobSummary(output), err)
+			if err != nil {
+				return err
+			}
+			query.JobSummaryFunction(listOutput2JobSummary(output))
 			nextToken = output.NextToken
 			if nextToken == nil {
 				break
@@ -283,7 +286,7 @@ func (abp *AwsBatchProvider) Status(jobQueue string, query JobsSummaryQuery) err
 		if err != nil {
 			return err
 		}
-		query.JobSummaryFunction(listOutput2JobSummary(output), err)
+		query.JobSummaryFunction(listOutput2JobSummary(output))
 		nextToken = output.NextToken
 		if nextToken == nil {
 			break
