@@ -21,6 +21,23 @@ type ArrayEventGenerator struct {
 
 func NewArrayEventGenerator(event Event, start int64, end int64) (*ArrayEventGenerator, error) {
 	manifestCount := len(event.Manifests)
+
+	//order the set of manifests
+	if manifestCount > 1 {
+		orderedIds, err := event.TopoSort()
+		if err != nil {
+			log.Printf("Unable to order event %s: %s\n", event.ID, err)
+		}
+		orderedManifests := make([]ComputeManifest, len(event.Manifests))
+		for i, oid := range orderedIds {
+			orderedManifests[i], err = getManifest(event.Manifests, oid)
+			if err != nil {
+				log.Printf("Unable to order event %s: %s\n", event.ID, err)
+			}
+		}
+		event.Manifests = orderedManifests
+	}
+
 	for i := 0; i < manifestCount; i++ {
 		err := event.Manifests[i].WritePayload()
 		if err != nil {
@@ -92,22 +109,7 @@ func (el *EventList) HasNextEvent() bool {
 // If sort fails it will log the issue and return the unsorted manifest slice
 func (el *EventList) NextEvent() Event {
 	event := el.events[el.currentEvent]
-	if len(event.Manifests) > 1 {
-		orderedIds, err := event.TopoSort()
-		if err != nil {
-			log.Printf("Unable to order event %s: %s\n", event.ID, err)
-			return event
-		}
-		orderedManifests := make([]ComputeManifest, len(event.Manifests))
-		for i, oid := range orderedIds {
-			orderedManifests[i], err = getManifest(event.Manifests, oid)
-			if err != nil {
-				log.Printf("Unable to order event %s: %s\n", event.ID, err)
-				return event
-			}
-		}
-		event.Manifests = orderedManifests
-	}
+
 	return event
 }
 
