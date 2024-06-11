@@ -179,7 +179,7 @@ func (cm *ComputeManifest) GetPayload() uuid.UUID {
 func (cm *ComputeManifest) WritePayload() error {
 	if cm.payloadID == uuid.Nil {
 		payloadId := uuid.New()
-		computeStore, err := NewCcStore(payloadId.String())
+		computeStore, err := NewCcStore(cm.ManifestID, payloadId.String())
 		if err != nil {
 			return err
 		}
