@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.7
 	github.com/google/uuid v1.6.0
-	github.com/usace/cc-go-sdk v0.0.0-20240611143104-fd9aba2a061b
+	github.com/usace/cc-go-sdk v0.0.0-20240611184425-06f941ff4742
 )
 
 require (

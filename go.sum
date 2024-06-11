@@ -99,6 +99,8 @@ github.com/spf13/cast v1.6.0/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cA
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/usace/cc-go-sdk v0.0.0-20240611143104-fd9aba2a061b h1:oKMwyo4v9JnCkTFt4yR0rbXskPMWM8Wwdj3QJ0DAFls=
 github.com/usace/cc-go-sdk v0.0.0-20240611143104-fd9aba2a061b/go.mod h1:YKzh58ylozTC8hd/lzDsuohoccDByo6Cn0SLPuLhwiQ=
+github.com/usace/cc-go-sdk v0.0.0-20240611184425-06f941ff4742 h1:imZfnkdKbA4njhoCZOji2g4GdbBtw/MmFJl7ffZQY4s=
+github.com/usace/cc-go-sdk v0.0.0-20240611184425-06f941ff4742/go.mod h1:YKzh58ylozTC8hd/lzDsuohoccDByo6Cn0SLPuLhwiQ=
 github.com/usace/filesapi v0.0.0-20240410125920-311040146fc6 h1:/Q8KbFNUg4X/Cwv4ozqNZBUSKYEqH9u1A4zEs45Ho9Y=
 github.com/usace/filesapi v0.0.0-20240410125920-311040146fc6/go.mod h1:n93SV2TkqTZQvaxEmraFCSMUDTbPVyc2uc8q+UTp9Q8=
 github.com/usace/filesapi v0.0.0-20240603195053-3fa10ec2cb22 h1:pI5oFl4PD9dwZWh12l09A/QsxSodWmxItzT3+44MLpo=
